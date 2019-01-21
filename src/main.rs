@@ -4,7 +4,7 @@ use enocean::enocean::*;
 use serialport::prelude::*;
 use std::time::Duration;
 
-use std::io::{self};
+use std::io;
 
 fn main() {
     // Print available ports
@@ -22,7 +22,7 @@ fn main() {
     settings.stop_bits = serialport::StopBits::One;
     settings.flow_control = serialport::FlowControl::None;
 
-    // Open serial port 
+    // Open serial port
     println!("Try to connect to {}", port_name);
     match serialport::open_with_settings(&port_name, &settings) {
         Ok(mut port) => {
@@ -36,8 +36,7 @@ fn main() {
                         // Get-it as enocean_message (byte vector)
                         let enocean_message = get_raw_message(Vec::from(&serial_buf[..t]));
                         // And then parse it
-                        match esp3_of_enocean_message(enocean_message)
-                        {
+                        match esp3_of_enocean_message(enocean_message) {
                             Ok(u) => {
                                 println!("ESP3 PACKET : {:#X?}", u);
                             }

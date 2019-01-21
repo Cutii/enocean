@@ -5,19 +5,18 @@
 //! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).
 //!
 //! ## Feature Overview
-//! For now this lib allow you to create an ESP struct from an incomming bytes vector. 
-//! 
-//! Supported packet type :     
+//! For now this lib allow you to create an ESP struct from an incomming bytes vector.
+//!
+//! Supported packet type :
 //! [x] Radio ERP1 : 0x01
 //! [ ] Response : 0x02
-//! [ ] radio_sub_tel : 0x03      
-//! [ ] event : 0x04    
-//! [ ] common_command : 0x05    
-//! [ ] smart_ack_command : 0x06    
-//! [ ] remote_man_command : 0x07    
-//! [ ] radio_message : 0x09    
-//! [ ] radio_advanced : 0x0a    
-
+//! [ ] radio_sub_tel : 0x03
+//! [ ] event : 0x04
+//! [ ] common_command : 0x05
+//! [ ] smart_ack_command : 0x06
+//! [ ] remote_man_command : 0x07
+//! [ ] radio_message : 0x09
+//! [ ] radio_advanced : 0x0a
 
 use std::error;
 use std::fmt;
@@ -152,16 +151,16 @@ fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
 
     match esp3.packet_type {
         PacketType::RadioErp1 => esp3_vector.push(0x01),
-         PacketType::Response => esp3_vector.push(0x02),
-         PacketType::RadioSubTel => esp3_vector.push(0x03),
-         PacketType::Event => esp3_vector.push(0x04),
-         PacketType::CommonCommand => esp3_vector.push(0x05),
-         PacketType::SmartAckCommand => esp3_vector.push(0x06),
-         PacketType::RemoteManCommand => esp3_vector.push(0x07),
-         PacketType::RadioMessage => esp3_vector.push(0x09),
-         PacketType::RadioErp2 => esp3_vector.push(0x0A),
-         PacketType::Radio802_15_4 => esp3_vector.push(0x10),
-         PacketType::Command2_4 => esp3_vector.push(0x11),
+        PacketType::Response => esp3_vector.push(0x02),
+        PacketType::RadioSubTel => esp3_vector.push(0x03),
+        PacketType::Event => esp3_vector.push(0x04),
+        PacketType::CommonCommand => esp3_vector.push(0x05),
+        PacketType::SmartAckCommand => esp3_vector.push(0x06),
+        PacketType::RemoteManCommand => esp3_vector.push(0x07),
+        PacketType::RadioMessage => esp3_vector.push(0x09),
+        PacketType::RadioErp2 => esp3_vector.push(0x0A),
+        PacketType::Radio802_15_4 => esp3_vector.push(0x10),
+        PacketType::Command2_4 => esp3_vector.push(0x11),
         _ => esp3_vector.push(0xff),
     }
 
@@ -316,15 +315,15 @@ fn u8_of_rorg(rorg: &Rorg) -> u8 {
         Rorg::Bs1 => 0xD5,
         Rorg::Bs4 => 0xA5,
         Rorg::Vld => 0xD2,
-        Rorg::Msc      => 0xD1,
-        Rorg::Adt      => 0xA6,
+        Rorg::Msc => 0xD1,
+        Rorg::Adt => 0xA6,
         Rorg::Ute => 0xD4,
         Rorg::SmLrnReq => 0xC6,
         Rorg::SmLrnAns => 0xC7,
-        Rorg::SmRec    => 0xA7,
-        Rorg::SysEx    => 0xC5,
-        Rorg::Sec      => 0x30,
-        Rorg::SecEncaps=> 0x31,
+        Rorg::SmRec => 0xA7,
+        Rorg::SysEx => 0xC5,
+        Rorg::Sec => 0x30,
+        Rorg::SecEncaps => 0x31,
         _ => 0xff,
     }
 }
@@ -486,7 +485,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
             });
         }
     }
-    
+
     // Return an Ok(ESP3)
     Ok(ESP3 {
         data_length,
@@ -498,7 +497,6 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         crc_data,
     })
 }
-
 
 /// Unit Tests
 #[cfg(test)]
@@ -692,8 +690,6 @@ mod tests {
         assert_eq!(result_rorg, valid_rorg);
         assert_eq!(result_status, valid_status);
     }
-
-
 
     // TELEGRAMS examples :
     //
