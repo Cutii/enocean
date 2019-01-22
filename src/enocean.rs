@@ -1,16 +1,15 @@
 //! Enocean Radio protocol for Smart Homes rust implementation ([official website](https://www.enocean.com/en/))
-//!
 //! EnOcean is a Radio protocol for SmartHome devices. More informations about EnOcean : [Official website](https://www.enocean.com/en/)
 //! This lib allow you to play with Enocean Serial Protocol, which is defined here: [ESP3](https://www.enocean.com/esp)
-//! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).
+//! You can use this library with any compatible EnOcean Radio Gateway eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/).  
 //!
-//! ## Feature Overview
-//! For now this lib allow you to create an ESP struct from an incomming bytes vector.
+//! ## Feature Overview  
+//! By now this lib allow you to create an ESP struct from an incomming bytes vector.
 //!
-//! Supported packet type :
-//! [x] Radio ERP1 : 0x01
-//! [ ] Response : 0x02
-//! [ ] radio_sub_tel : 0x03
+//! ** Supported packet types : **  
+//! [x] Radio ERP1 : 0x01   
+//! [ ] Response : 0x02   
+//! [ ] radio_sub_tel : 0x03   
 //! [ ] event : 0x04
 //! [ ] common_command : 0x05
 //! [ ] smart_ack_command : 0x06
@@ -49,11 +48,13 @@ enum ParseEspErrorKind {
 impl fmt::Display for ParseEspError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.byte_index {
+            // Error chould occur on a specific byte
             Some(bi) => write!(
                 f,
                 "{:?} error :{} in {:x?} at index {}",
                 self.kind, self.message, self.packet, bi
             ),
+            // Or on whole packet
             _ => write!(
                 f,
                 "{:?} error :{} in packet {:x?}",
@@ -78,7 +79,6 @@ type EnoceanMessage = Vec<u8>;
 pub fn get_raw_message(em: EnoceanMessage) -> EnoceanMessage {
     em.clone()
 }
-
 ///  Main structure that represent an EnOcean Serial Packet according to ESP3 :  
 ///  
 /// | Size (Byte) |   1    |       2          |        1      |      1    |      1    | u16 DataLen + u8 OptionLen |      1      |  
@@ -133,37 +133,19 @@ pub struct ESP3 {
     data_length: u16,
     optionnal_data_length: u8,
     packet_type: PacketType,
-    data: DataType,
+    pub data: DataType,
     opt_data: OptDataType,
     crc_header: u8,
     crc_data: u8,
 }
 
-/// Function to switch between struct / u8 vector or to construct one.
+/// Function to transform an ESP3 packet to an u8 vector.
 fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
     let mut esp3_vector: EnoceanMessage = vec![0x55];
-    let data_length_msb: u8 = (esp3.data_length >> 8) as u8;
-    let data_length_lsb: u8 = (esp3.data_length) as u8;
-
     esp3_vector.push((esp3.data_length >> 8) as u8);
     esp3_vector.push((esp3.data_length) as u8);
     esp3_vector.push(esp3.optionnal_data_length);
-
-    match esp3.packet_type {
-        PacketType::RadioErp1 => esp3_vector.push(0x01),
-        PacketType::Response => esp3_vector.push(0x02),
-        PacketType::RadioSubTel => esp3_vector.push(0x03),
-        PacketType::Event => esp3_vector.push(0x04),
-        PacketType::CommonCommand => esp3_vector.push(0x05),
-        PacketType::SmartAckCommand => esp3_vector.push(0x06),
-        PacketType::RemoteManCommand => esp3_vector.push(0x07),
-        PacketType::RadioMessage => esp3_vector.push(0x09),
-        PacketType::RadioErp2 => esp3_vector.push(0x0A),
-        PacketType::Radio802_15_4 => esp3_vector.push(0x10),
-        PacketType::Command2_4 => esp3_vector.push(0x11),
-        _ => esp3_vector.push(0xff),
-    }
-
+    esp3_vector.push(esp3.packet_type as u8);
     esp3_vector.push(esp3.crc_header);
 
     match &esp3.data {
@@ -173,7 +155,7 @@ fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
             status,
             payload,
         } => {
-            esp3_vector.push(u8_of_rorg(rorg));
+            esp3_vector.push(*rorg as u8);
             esp3_vector.extend_from_slice(&payload);
             esp3_vector.extend_from_slice(sender_id);
             esp3_vector.push(*status);
@@ -204,7 +186,7 @@ fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
 
 /// Depending on packet_type, data and opt_data part of an ESP3 is implemented differently
 #[derive(Debug, PartialEq, Clone)]
-enum DataType {
+pub enum DataType {
     RawData {
         raw_data: Vec<u8>,
     },
@@ -217,7 +199,7 @@ enum DataType {
 }
 /// Depending on packet_type, data and opt_data part of an ESP3 is implemented differently
 #[derive(Debug, PartialEq, Clone)]
-enum OptDataType {
+pub enum OptDataType {
     RawData {
         raw_data: Vec<u8>,
     },
@@ -273,23 +255,23 @@ fn get_packet_type(em: &EnoceanMessage) -> ParseEspResult<PacketType> {
 
 /// Simple implementation of possible Radio Organization for a Radio ERP1 packet (from EnOcean ESP3)
 #[derive(PartialEq, Debug, Clone, Copy)]
-enum Rorg {
+pub enum Rorg {
     Undefined,
-    Rps,
-    Bs1,
-    Bs4,
-    Vld,
-    Msc,
-    Adt,
-    Ute,
-    SmLrnReq,
-    SmLrnAns,
-    SmRec,
-    SysEx,
-    Sec,
-    SecEncaps,
+    Rps = 0x01,
+    Bs1 = 0xD5,
+    Bs4 = 0xA5,
+    Vld= 0xD2,
+    Msc= 0xD1,
+    Adt= 0xA6,
+    Ute= 0xD4,
+    SmLrnReq= 0xC6,
+    SmLrnAns= 0xC7,
+    SmRec= 0xA7,
+    SysEx= 0xC5,
+    Sec= 0x30,
+    SecEncaps= 0x31,
 }
-/// Given an EnOcean Serial Packet (Packet Type set as RadioErp1), return the corresponding PacketType
+/// Given an u8 byte containing Rorg indicator, return the corresponding Rorg variant
 fn get_radio_organization(rorg_byte: u8) -> Rorg {
     match rorg_byte {
         0xF6 => Rorg::Rps,
@@ -306,25 +288,6 @@ fn get_radio_organization(rorg_byte: u8) -> Rorg {
         0x30 => Rorg::Sec,
         0x31 => Rorg::SecEncaps,
         _ => Rorg::Undefined,
-    }
-}
-/// Given an EnOcean Serial Packet (Packet Type set as RadioErp1), return the corresponding PacketType
-fn u8_of_rorg(rorg: &Rorg) -> u8 {
-    match rorg {
-        Rorg::Rps => 0xF6,
-        Rorg::Bs1 => 0xD5,
-        Rorg::Bs4 => 0xA5,
-        Rorg::Vld => 0xD2,
-        Rorg::Msc => 0xD1,
-        Rorg::Adt => 0xA6,
-        Rorg::Ute => 0xD4,
-        Rorg::SmLrnReq => 0xC6,
-        Rorg::SmLrnAns => 0xC7,
-        Rorg::SmRec => 0xA7,
-        Rorg::SysEx => 0xC5,
-        Rorg::Sec => 0x30,
-        Rorg::SecEncaps => 0x31,
-        _ => 0xff,
     }
 }
 
@@ -497,6 +460,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         crc_data,
     })
 }
+
 
 /// Unit Tests
 #[cfg(test)]
