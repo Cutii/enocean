@@ -308,27 +308,27 @@ pub enum Rorg {
 /// Simple implementation of possible Return codes for a response packet (from EnOcean ESP3)
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ReturnCode {
-    retOk=0x00,
-    retError=0x01,
-    retNotSupported=0x02,
-    retWrongParam=0x03,
-    retOperationDenied=0x04,
-    retLockSet=0x05,
-    retBufferTooSmall=0x06,
-    retNoFreeBuffer=0x07,
-    retUndefined=0xff,
+    Ok=0x00,
+    Error=0x01,
+    NotSupported=0x02,
+    WrongParam=0x03,
+    OperationDenied=0x04,
+    LockSet=0x05,
+    BufferTooSmall=0x06,
+    NoFreeBuffer=0x07,
+    Undefined=0xff,
 }
 fn get_return_code(rc_byte: u8) -> ReturnCode {
     match rc_byte {
-        0x00 => ReturnCode::retOk,
-        0x01 => ReturnCode::retError,
-        0x02 => ReturnCode::retNotSupported,
-        0x03 => ReturnCode::retWrongParam,
-        0x04 => ReturnCode::retOperationDenied,
-        0x05 => ReturnCode::retLockSet,
-        0x06 => ReturnCode::retBufferTooSmall,
-        0x07 => ReturnCode::retNoFreeBuffer,
-        _ => ReturnCode::retUndefined,
+        0x00 => ReturnCode::Ok,
+        0x01 => ReturnCode::Error,
+        0x02 => ReturnCode::NotSupported,
+        0x03 => ReturnCode::WrongParam,
+        0x04 => ReturnCode::OperationDenied,
+        0x05 => ReturnCode::LockSet,
+        0x06 => ReturnCode::BufferTooSmall,
+        0x07 => ReturnCode::NoFreeBuffer,
+        _ => ReturnCode::Undefined,
     }
 }
 
@@ -756,11 +756,11 @@ mod tests {
                 result_payload = response_payload;
             }
             _ => {
-                result_return_code = ReturnCode::retUndefined;
+                result_return_code = ReturnCode::Undefined;
                 result_payload=Some(vec![0,1,2,3]);
             }
         }
-        assert_eq!(result_return_code, ReturnCode::retOk);
+        assert_eq!(result_return_code, ReturnCode::Ok);
         assert_eq!(result_payload.is_none(),true);
     }
 

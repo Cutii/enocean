@@ -3,6 +3,13 @@ name = "enocean"
 version = "0.1.0"
 authors = ["pmirabel"]
 edition = "2018"
+description = "EnOcean serial protocol implementation."
+license = "MIT AND Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/Cutii/enocean"
+homepage = "https://github.com/Cutii/enocean"
+keywords = ["enocean", "domotic", "smarthome" ]
 
 [dependencies]
 serialport = "3.2.0"
+
