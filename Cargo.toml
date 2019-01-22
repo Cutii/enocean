@@ -8,6 +8,7 @@ license = "MIT AND Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Cutii/enocean"
 homepage = "https://github.com/Cutii/enocean"
+documentation = "https://docs.rs/enocean/"
 keywords = ["enocean", "domotic", "smarthome" ]
 
 [dependencies]
