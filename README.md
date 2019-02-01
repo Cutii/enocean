@@ -7,11 +7,15 @@ Enocean : ([official website](https://www.enocean.com/en/)) is a Radio protocol 
 This lib is a rust implementation of Enocean Serial Protocol, which you can find here: [ESP3](https://www.enocean.com/esp)           
 You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway]https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).           
          
-:warning: **This lib is still under construction** :warning:           
+:warning: **This lib is still under construction** :warning:       
+
+## Example    
+*cargo run --example main* :    
          
 ## Feature Overview           
          
-This lib use [serialport](https://crates.io/crates/serialport) crate to interact with Serial / Radio gateway.     
+This lib use [serialport](https://crates.io/crates/serialport) crate to interact with Serial / Radio gateway.      
+:warning: For now, link between enocean device ID and its EEP is hardcoded in eep.rs file.
 
 **Library files main content:** (Non axhaustive, just for quick overview)   
 - enocean.rs : Enocean serial protocol implementation (eg . Vector of byte to Ensocean Serial Packet)  (...)   
