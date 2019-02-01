@@ -1,1 +1,0 @@
-{"rustc":11161650738512304635,"features":"[]","target":18267921391510519941,"profile":13846881912122723292,"path":5227610279989176592,"deps":[["CoreFoundation-sys v0.1.4","CoreFoundation_sys",7128323311488490229],["libc v0.2.47","libc",2366986261697903101],["mach v0.1.2","mach",4851232870584882277]],"local":[{"Precalculated":"0.1.5"}],"rustflags":[],"edition":"Edition2015"}
