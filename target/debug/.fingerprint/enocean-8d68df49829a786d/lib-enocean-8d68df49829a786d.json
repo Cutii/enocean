@@ -1,0 +1,1 @@
+{"rustc":11161650738512304635,"features":"[]","target":8815300872701966433,"profile":14898929546352884219,"path":10872709659218687626,"deps":[["serialport v3.2.0","serialport",557484650248149887]],"local":[{"MtimeBased":[[1549030244,940924223],".fingerprint/enocean-8d68df49829a786d/dep-lib-enocean-8d68df49829a786d"]}],"rustflags":[],"edition":"Edition2018"}

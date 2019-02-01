@@ -1,98 +1,45 @@
-//!  # Enocean implementation for the Rust Programming Language  
-//!  
+//!  # locEnocean implementation for the Rust Programming Language
+//!
 //! Enocean : ([official website](https://www.enocean.com/en/)) is a Radio protocol for Smart Home / Buildings devices.
-//! 
-//! This lib is a rust implementation of Enocean Serial Protocol, which you can find here: [ESP3](https://www.enocean.com/esp)  
-//! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway]https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).   
-//!   
-//! 
-//! :warning: **This lib is still under construction** :warning:  
-//! 
-//! ## Feature Overview  
+//!
+//! This lib is a rust implementation of Enocean Serial Protocol, which you can find here: [ESP3](https://www.enocean.com/esp)
+//! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway]https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).
+//!
+//!
+//! :warning: **This lib is still under construction** :warning:
+//!
+//! ## Feature Overview
 //! Enocean Radio protocol for Smart Homes rust implementation ([official website](https://www.enocean.com/en/))
-//! 
+//!
 //!  EnOcean is a Radio protocol for SmartHome devices. More informations about EnOcean : [Official website](https://www.enocean.com/en/)
 //! This lib allow you to play with Enocean Serial Protocol, which is defined here: [ESP3](https://www.enocean.com/esp)
 //! You can use this library with any compatible EnOcean Radio Gateway eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/).
-//! 
-//! For now this lib allow you to create an ESP struct from an incomming bytes vector. 
-//! 
-//! **Supported packet type** :     
-//! [x] Radio ERP1 : 0x01    
-//! [x] Response : 0x02     
-//! [ ] radio_sub_tel : 0x03       
-//! [ ] event : 0x04     
-//! [ ] common_command : 0x05    
-//! [ ] smart_ack_command : 0x06    
-//! [ ] remote_man_command : 0x07    
-//! [ ] radio_message : 0x09    
-//! [ ] radio_advanced : 0x0a    
-//! 
+//!
+//! For now this lib allow you to create an ESP struct from an incomming bytes vector.
+//!
+//! **Supported packet type** :
+//! [x] Radio ERP1 : 0x01
+//! [x] Response : 0x02
+//! [ ] radio_sub_tel : 0x03
+//! [ ] event : 0x04
+//! [ ] common_command : 0x05
+//! [ ] smart_ack_command : 0x06
+//! [ ] remote_man_command : 0x07
+//! [ ] radio_message : 0x09
+//! [ ] radio_advanced : 0x0a
+//!
 //! ## License
 //! [license]: #license
-//! 
+//!
 //! This library is primarily distributed under the terms of both the MIT license
-//! and the Apache License (Version 2.0).  
-//! 
-//! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.  
-//! 
-use std::error;
-use std::fmt;
+//! and the Apache License (Version 2.0).
+//!
+//! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
+//!
+
 use std::vec::Vec;
 
-/// Custom Result type = std::result::Result<T, ParseEspError>
-type ParseEspResult<T> = std::result::Result<T, ParseEspError>;
-
-/// Custom error type (eg. allow to see corresponding packet / byte index )
-#[derive(Debug, Clone)]
-pub struct ParseEspError {
-    /// ErrorKind
-    kind: ParseEspErrorKind,
-    /// Associated message
-    message: String,
-    /// Index of the byte which caused the error
-    byte_index: Option<i16>,
-    /// Packet which caused this error
-    packet: Vec<u8>,
-}
-/// Kind of error
-#[derive(Debug, Clone)]
-enum ParseEspErrorKind {
-    NoSyncByte,
-    CrcMismatch,
-    IncompleteMessage,
-    Unimplemented,
-}
-
-impl fmt::Display for ParseEspError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.byte_index {
-            // Error chould occur on a specific byte
-            Some(bi) => write!(
-                f,
-                "{:?} error :{} in {:x?} at index {}",
-                self.kind, self.message, self.packet, bi
-            ),
-            // Or on whole packet
-            _ => write!(
-                f,
-                "{:?} error :{} in packet {:x?}",
-                self.kind, self.message, self.packet
-            ),
-        }
-    }
-}
-impl error::Error for ParseEspError {
-    fn description(&self) -> &str {
-        &self.message
-    }
-    fn cause(&self) -> Option<&error::Error> {
-        None
-    }
-}
-
-/// Working with the type EnoceanMessage is more explicit than u8 vector.
-type EnoceanMessage = Vec<u8>;
+use crate::*;
 
 /// Simply clone the given u8 vector in an EnoceaMessage type variable
 pub fn get_raw_message(em: EnoceanMessage) -> EnoceanMessage {
@@ -152,14 +99,47 @@ pub struct ESP3 {
     data_length: u16,
     optionnal_data_length: u8,
     packet_type: PacketType,
-    data: DataType,
+    pub data: DataType,
     opt_data: Option<OptDataType>,
     crc_header: u8,
     crc_data: u8,
 }
 
+/// Util function to display packet information. Maybe we have to impl display for ESP3 instead ?
+pub fn print_esp3(u: ESP3) {
+    match &u.data {
+        DataType::Erp1Data {
+            rorg,
+            sender_id,
+            status,
+            payload,
+        } => {
+            println!("New {:X?} radio message from: {:X?} ", rorg, sender_id);
+            println!(
+                "{:#X?}",
+                enocean::eep::parse_erp1_payload(&u).unwrap_or_default()
+            );
+        }
+        DataType::ResponseData {
+            return_code,
+            response_payload,
+        } => {
+            println!("Response from TCM300 with RC : {:X?}", *return_code as u8);
+            match response_payload {
+                Some(ref payload) => {
+                    println!("And Payload: {:X?}", payload);
+                }
+                None => {}
+            }
+        }
+        DataType::RawData { raw_data } => {
+            println!("Unknow message: {:X?}", raw_data);
+        }
+    }
+}
+
 /// Function to transform an ESP3 packet to an u8 vector.
-fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
+pub fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
     let mut esp3_vector: EnoceanMessage = vec![0x55];
     esp3_vector.push((esp3.data_length >> 8) as u8);
     esp3_vector.push((esp3.data_length) as u8);
@@ -308,15 +288,15 @@ pub enum Rorg {
 /// Simple implementation of possible Return codes for a response packet (from EnOcean ESP3)
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ReturnCode {
-    Ok=0x00,
-    Error=0x01,
-    NotSupported=0x02,
-    WrongParam=0x03,
-    OperationDenied=0x04,
-    LockSet=0x05,
-    BufferTooSmall=0x06,
-    NoFreeBuffer=0x07,
-    Undefined=0xff,
+    Ok = 0x00,
+    Error = 0x01,
+    NotSupported = 0x02,
+    WrongParam = 0x03,
+    OperationDenied = 0x04,
+    LockSet = 0x05,
+    BufferTooSmall = 0x06,
+    NoFreeBuffer = 0x07,
+    Undefined = 0xff,
 }
 fn get_return_code(rc_byte: u8) -> ReturnCode {
     match rc_byte {
@@ -403,15 +383,7 @@ pub fn compute_crc8(msg: &Vec<u8>) -> u8 {
 
 pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
     // Make some verifications about the received message
-    if em.len() <= 7 {
-        // Minimal EnOcean message size = 7 bytes
-        return Err(ParseEspError {
-            message: String::from("Invalid input message"),
-            byte_index: None,
-            packet: em,
-            kind: ParseEspErrorKind::IncompleteMessage,
-        });
-    } else if em[0] != 0x55 {
+    if em[0] != 0x55 {
         // EnOcean message must start by 0x55
         return Err(ParseEspError {
             message: String::from("Sync Byte Error"),
@@ -419,9 +391,17 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
             packet: em,
             kind: ParseEspErrorKind::NoSyncByte,
         });
+    } else if em.len() <= 7 {
+        // Minimal EnOcean message size = 7 bytes
+        return Err(ParseEspError {
+            message: String::from("Invalid input message"),
+            byte_index: None,
+            packet: em,
+            kind: ParseEspErrorKind::IncompleteMessage,
+        });
     }
     let crc_header = em[5];
-    if compute_crc8(&em[1..5].to_vec()) != em[5]{
+    if compute_crc8(&em[1..5].to_vec()) != em[5] {
         // EnOcean message header CRC can be checked without complex parsing
         return Err(ParseEspError {
             message: String::from("CRC Error"),
@@ -730,13 +710,12 @@ mod tests {
     // -------------------------------------------------------------------
     #[test]
     fn given_valid_response_packet_then_return_corresponding_esp() {
-        
         let header: Vec<u8> = vec![0, 01, 0, 2];
         let crc_header = compute_crc8(&header);
         let data: Vec<u8> = vec![0];
         let crc_data = compute_crc8(&data);
 
-        let mut received_message : Vec<u8> = vec![0x55];
+        let mut received_message: Vec<u8> = vec![0x55];
         received_message.extend_from_slice(&header);
         received_message.push(crc_header);
         received_message.extend_from_slice(&data);
@@ -744,24 +723,24 @@ mod tests {
 
         let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
 
-        let mut result_return_code : ReturnCode;
-        let mut result_payload : Option<Vec<u8>>;
+        let mut result_return_code: ReturnCode;
+        let mut result_payload: Option<Vec<u8>>;
 
         match esp3_packet.data {
             DataType::ResponseData {
                 response_payload,
-                return_code
+                return_code,
             } => {
-                result_return_code= return_code;
+                result_return_code = return_code;
                 result_payload = response_payload;
             }
             _ => {
                 result_return_code = ReturnCode::Undefined;
-                result_payload=Some(vec![0,1,2,3]);
+                result_payload = Some(vec![0, 1, 2, 3]);
             }
         }
         assert_eq!(result_return_code, ReturnCode::Ok);
-        assert_eq!(result_payload.is_none(),true);
+        assert_eq!(result_payload.is_none(), true);
     }
 
     // TELEGRAMS examples :
