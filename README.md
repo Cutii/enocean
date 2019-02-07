@@ -5,12 +5,12 @@
 Enocean : ([official website](https://www.enocean.com/en/)) is a Radio protocol for Smart Home / Buildings devices.         
          
 This lib is a rust implementation of Enocean Serial Protocol, which you can find here: [ESP3](https://www.enocean.com/esp)           
-You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway]https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).           
+You can use this library with any compatible EnOcean Radio Gateway eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/) .           
          
 :warning: **This lib is still under construction** :warning:       
 
 ## Example    
-*cargo run --example main* :    
+*cargo run --example main*   
          
 ## Feature Overview           
          
@@ -33,12 +33,7 @@ This lib use [serialport](https://crates.io/crates/serialport) crate to interact
 [ ] smart_ack_command : 0x06             
 [ ] remote_man_command : 0x07             
 [ ] radio_message : 0x09             
-[ ] radio_advanced : 0x0a             
-
-
-**ToDo for this specific version** :              
-[ ] Remove debug print            
-[ ] add missing unit tests                              
+[ ] radio_advanced : 0x0a                                 
             
 
 ## License         

@@ -7,18 +7,18 @@ pub fn parse_erp1_payload(esp: &ESP3) -> ParseEspResult<HashMap<String, String>>
     match &esp.data {
         // ERP Treatments
         DataType::Erp1Data {
-            rorg,
+            rorg:_rorg,
             sender_id,
-            status,
+            status:_status,
             payload,
         } => {
             match get_eep(sender_id) {
                 // The way we parse the packet payload depends on its EEP
-                Some(EEP::a50401) => Ok(parse_a50401_data(&payload)),
-                Some(EEP::f60201) => Ok(parse_f60201_data(&payload)),
-                Some(EEP::f60202) => Ok(parse_f60202_data(&payload)),
-                Some(EEP::d2010e) => Ok(parse_d201_data(&payload)),
-                Some(EEP::d50001) => Ok(parse_d50001_data(&payload)),
+                Some(EEP::A50401) => Ok(parse_a50401_data(&payload)),
+                Some(EEP::F60201) => Ok(parse_f60201_data(&payload)),
+                Some(EEP::F60202) => Ok(parse_f60202_data(&payload)),
+                Some(EEP::D2010E) => Ok(parse_d201_data(&payload)),
+                Some(EEP::D50001) => Ok(parse_d50001_data(&payload)),
 
                 _ => {
                     return Err(ParseEspError {
@@ -40,11 +40,11 @@ pub fn parse_erp1_payload(esp: &ESP3) -> ParseEspResult<HashMap<String, String>>
 }
 /// These EEP are currently supported by this lib
 pub enum EEP {
-    a50401,
-    d2010e, //partially supported
-    d50001,
-    f60201,
-    f60202,
+    A50401,
+    D2010E, //partially supported
+    D50001,
+    F60201,
+    F60202,
 }
 
 /// These D201 (eg. smart plugs) commands are supported by this lib
@@ -59,11 +59,11 @@ pub enum D201CommandList {
 /// Link between EnOcean ID and EEP. This part has to be improved (stock EEP<->ID somehow)...
 pub fn get_eep(id: &[u8; 4]) -> Option<EEP> {
     match id {
-        [5, 17, 114, 247] => Some(EEP::a50401),
-        [254, 245, 143, 245] => Some(EEP::f60201),
-        [0, 49, 192, 249] => Some(EEP::f60202),
-        [0x05, 0x0a, 0x3d, 0x6a] => Some(EEP::d2010e),
-        [0x01, 0x92, 0x3d, 0xa8] => Some(EEP::d50001),
+        [5, 17, 114, 247] => Some(EEP::A50401),
+        [254, 245, 143, 245] => Some(EEP::F60201),
+        [0, 49, 192, 249] => Some(EEP::F60202),
+        [0x05, 0x0a, 0x3d, 0x6a] => Some(EEP::D2010E),
+        [0x01, 0x92, 0x3d, 0xa8] => Some(EEP::D50001),
 
         _ => None,
     }
@@ -420,34 +420,34 @@ mod tests {
             85, 0, 10, 7, 1, 235, 165, 0, 229, 204, 10, 5, 17, 114, 247, 0, 1, 255, 255, 255, 255,
             54, 0, 213,
         ];
-        let mut result_sender_id: &[u8; 4];
-        let mut result_rorg: &Rorg;
-        let mut result_status: &u8;
-        let mut result_payload: Vec<u8> = Vec::new();
+        let _result_sender_id: &[u8; 4];
+        let _result_rorg: &Rorg;
+        let _result_status: &u8;
+        let _result_payload: Vec<u8>;
 
         let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
 
-        match &esp3_packet.data {
-            DataType::Erp1Data {
-                rorg,
-                sender_id,
-                status,
-                payload,
-            } => {
-                result_sender_id = sender_id;
-                result_rorg = rorg;
-                result_status = status;
-                result_payload = payload.clone();
-            }
-            _ => {
-                result_sender_id = &[0, 1, 2, 3];
-                result_rorg = &Rorg::Undefined;
-                result_status = &0xFF;
-                result_payload = vec![0];
-            }
-        }
+        // match &esp3_packet.data {
+        //     DataType::Erp1Data {
+        //         rorg,
+        //         sender_id,
+        //         status,
+        //         payload,
+        //     } => {
+        //         _result_sender_id = sender_id;
+        //         _result_rorg = rorg;
+        //         _result_status = status;
+        //         _result_payload = payload.clone();
+        //     }
+        //     _ => {
+        //         _result_sender_id = &[0, 1, 2, 3];
+        //         _result_rorg = &Rorg::Undefined;
+        //         _result_status = &0xFF;
+        //         _result_payload = vec![0];
+        //     }
+        // }
 
-        let eep: EEP = EEP::a50401;
+        let _eep: EEP = EEP::A50401;
 
         let results = parse_erp1_payload(&esp3_packet);
         let temp = results.unwrap();
@@ -466,7 +466,7 @@ mod tests {
             249,
         ];
         let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
-        let eep: EEP = EEP::f60201;
+        let _eep: EEP = EEP::F60201;
 
         let results = parse_erp1_payload(&esp3_packet).unwrap();
 

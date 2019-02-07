@@ -1,4 +1,3 @@
-use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
@@ -18,36 +17,39 @@ fn main() {
     let (enocean_emiter, enocean_event_receiver) = mpsc::channel();
     let (enocean_command_receiver, enocean_commander) = mpsc::channel();
 
-    let enocean_listener = thread::spawn(move || {
+    let _enocean_listener = thread::spawn(move || {
         enocean::communicator::listen(port_name, enocean_emiter, enocean_commander);
     });
 
     let command_emiter = thread::spawn(move || loop {
-        enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
+        match enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
             [0x05, 0x0a, 0x3d, 0x6a],
             enocean::eep::D201CommandList::QueryPower,
-        ));
+        )){
+            Ok (_t)=>{},
+            Err(e)=>{eprintln!("erreur lors de l'envoi : {:?}", e)};
+        }
         nb_sended = nb_sended + 1;
         println!("---> SENDED : {}", nb_sended);
-        thread::sleep(Duration::from_millis(1000));
-        enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
-            [0x05, 0x0a, 0x3d, 0x6a],
-            enocean::eep::D201CommandList::QueryEnergy,
-        ));
-        nb_sended = nb_sended + 1;
-        println!("---> SENDED : {}", nb_sended);
-        enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
-            [0x05, 0x0a, 0x3d, 0x6a],
-            enocean::eep::D201CommandList::Off,
-        ));
-        nb_sended = nb_sended + 1;
-        println!("---> SENDED : {}", nb_sended);
-        enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
-            [0x05, 0x0a, 0x3d, 0x6a],
-            enocean::eep::D201CommandList::On,
-        ));
-        nb_sended = nb_sended + 1;
-        println!("---> SENDED : {}", nb_sended);
+        // thread::sleep(Duration::from_millis(1000));
+        // enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
+        //     [0x05, 0x0a, 0x3d, 0x6a],
+        //     enocean::eep::D201CommandList::QueryEnergy,
+        // ));
+        // nb_sended = nb_sended + 1;
+        // println!("---> SENDED : {}", nb_sended);
+        // enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
+        //     [0x05, 0x0a, 0x3d, 0x6a],
+        //     enocean::eep::D201CommandList::Off,
+        // ));
+        // nb_sended = nb_sended + 1;
+        // println!("---> SENDED : {}", nb_sended);
+        // enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
+        //     [0x05, 0x0a, 0x3d, 0x6a],
+        //     enocean::eep::D201CommandList::On,
+        // ));
+        // nb_sended = nb_sended + 1;
+        // println!("---> SENDED : {}", nb_sended);
     });
 
     loop {

@@ -115,6 +115,7 @@ pub fn print_esp3(u: ESP3) {
             payload,
         } => {
             println!("New {:X?} radio message from: {:X?} ", rorg, sender_id);
+            println!("Status {:X?} Payload: {:X?} ", status, payload);
             println!(
                 "{:#X?}",
                 enocean::eep::parse_erp1_payload(&u).unwrap_or_default()
@@ -438,8 +439,8 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
 
     // If Message seems valid, we can then parse packet type
     let mut packet_type = PacketType::Undefined;
-    let mut data: DataType;
-    let mut opt_data: Option<OptDataType>;
+    let data: DataType;
+    let opt_data: Option<OptDataType>;
 
     // Depending on packet_type, we can parse more informations about the message
     match get_packet_type(&em) {
@@ -723,8 +724,8 @@ mod tests {
 
         let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
 
-        let mut result_return_code: ReturnCode;
-        let mut result_payload: Option<Vec<u8>>;
+        let result_return_code: ReturnCode;
+        let result_payload: Option<Vec<u8>>;
 
         match esp3_packet.data {
             DataType::ResponseData {

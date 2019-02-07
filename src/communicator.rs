@@ -3,14 +3,11 @@ use crate::enocean::*;
 use serialport::prelude::*;
 use std::time::Duration;
 
-use serialport::{available_ports, open};
 use std::io;
 use std::io::Write;
-use std::thread;
 
 use std::sync::mpsc;
 
-use crate::eep::parse_erp1_payload;
 use crate::ParseEspErrorKind;
 
 pub fn listen(
@@ -60,7 +57,15 @@ pub fn listen(
                         match esp3_of_enocean_message(get_raw_message(serial_buf[..t].to_vec())) {
                             Ok(esp3_packet) => {
                                 // If we achieved to transform it into an ESP3 packet, send it to the main thread
-                                enocean_event.send(esp3_packet);
+                                match enocean_event.send(esp3_packet.clone()) {
+                                    Ok(_result) => {}
+                                    Err(e) => {
+                                        eprintln!(
+                                            "Erreur lors de l'envoi du packet : {:?} erreur : {:?}",
+                                            esp3_packet, e
+                                        );
+                                    }
+                                }
                             }
                             Err(e) => {
                                 // If message was incomplete, maybe the telegram is just truncated (received in 2 differents parts)
@@ -81,7 +86,17 @@ pub fn listen(
                                                 match esp3_of_enocean_message(buffer) {
                                                     Ok(esp3_packet) => {
                                                         // send it to the main thread
-                                                        enocean_event.send(esp3_packet);
+                                                        match enocean_event
+                                                            .send(esp3_packet.clone())
+                                                        {
+                                                            Ok(_result) => {}
+                                                            Err(e) => {
+                                                                eprintln!(
+                                                            "Erreur lors de l'envoi du packet : {:?} erreur : {:?}",
+                                                            esp3_packet, e
+                                                            );
+                                                            }
+                                                        }
                                                     }
                                                     Err(e) => {
                                                         eprintln!(
