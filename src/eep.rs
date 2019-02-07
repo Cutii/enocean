@@ -108,10 +108,14 @@ fn parse_a50401_data(payload: &Vec<u8>) -> HashMap<String, String> {
 }
 fn parse_d50001_data(payload: &Vec<u8>) -> HashMap<String, String> {
     let mut parsed = HashMap::new();
-    parsed.insert(
-        String::from("ATTENTION"),
-        String::from("La fonction parse_d50001_data n'est pas implémentée"),
-    );
+    match bit_of_byte(4, &payload[0]) {
+        false => parsed.insert(String::from("LRNB"), String::from("pressed")),
+        true => parsed.insert(String::from("LRNB"), String::from("not pressed")),
+    };
+    match bit_of_byte(7, &payload[0]) {
+        false => parsed.insert(String::from("CO"), String::from("open")),
+        true => parsed.insert(String::from("CO"), String::from("closed")),
+    };
     parsed
 }
 
