@@ -34,7 +34,12 @@ This lib use [serialport](https://crates.io/crates/serialport) crate to interact
 [ ] remote_man_command : 0x07             
 [ ] radio_message : 0x09             
 [ ] radio_advanced : 0x0a             
-         
+
+
+**ToDo for this specific version** :              
+[ ] Remove debug print            
+[ ] add missing unit tests                              
+            
 
 ## License         
 [license]: #license         
