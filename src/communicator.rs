@@ -27,7 +27,7 @@ pub fn listen(
     settings.stop_bits = serialport::StopBits::One;
     settings.flow_control = serialport::FlowControl::None;
     // Open serial port (with a sender and receiver)
-    println!("Try to connect to {} : ", port_name);
+    // println!("Try to connect to {} : ", port_name);
     match serialport::open_with_settings(&port_name, &settings) {
         Ok(mut reader) => {
             let mut serial_buf: Vec<u8> = vec![0; 100];
@@ -56,7 +56,7 @@ pub fn listen(
                 match reader.read(serial_buf.as_mut_slice()) {
                     Ok(t) => {
                         // If we received an incomming telegram :
-                        println!("Received telegram : {:X?} ", &serial_buf[..t]);
+                        // println!("Received telegram : {:X?} ", &serial_buf[..t]);
                         match esp3_of_enocean_message(get_raw_message(serial_buf[..t].to_vec())) {
                             Ok(esp3_packet) => {
                                 // If we achieved to transform it into an ESP3 packet, send it to the main thread
@@ -77,7 +77,7 @@ pub fn listen(
                                             // If we have stored the first part before
                                             Some(mut buffer) => {
                                                 buffer.extend(e.packet.iter().cloned());
-                                                println!("REPAIRED telegram : {:X?} ", buffer);
+                                                // println!("REPAIRED telegram : {:X?} ", buffer);
                                                 match esp3_of_enocean_message(buffer) {
                                                     Ok(esp3_packet) => {
                                                         // send it to the main thread
