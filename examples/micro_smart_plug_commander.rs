@@ -1,10 +1,8 @@
 use std::sync::mpsc;
-use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 extern crate enocean;
-use enocean::eep::*;
 use enocean::enocean::*;
 
 fn main() {
@@ -21,13 +19,13 @@ fn main() {
         enocean::communicator::listen(port_name, enocean_emiter, enocean_commander);
     });
 
-    let command_emiter = thread::spawn(move || loop {
+    let _command_emiter = thread::spawn(move || loop {
         match enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
             [0x05, 0x0a, 0x3d, 0x6a],
             enocean::eep::D201CommandList::QueryPower,
-        )){
-            Ok (_t)=>{},
-            Err(e)=>{eprintln!("erreur lors de l'envoi : {:?}", e)};
+        )) {
+            Ok(_t) => {}
+            Err(e) => eprintln!("erreur lors de l'envoi : {:?}", e),
         }
         nb_sended = nb_sended + 1;
         println!("---> SENDED : {}", nb_sended);

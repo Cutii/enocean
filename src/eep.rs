@@ -7,9 +7,9 @@ pub fn parse_erp1_payload(esp: &ESP3) -> ParseEspResult<HashMap<String, String>>
     match &esp.data {
         // ERP Treatments
         DataType::Erp1Data {
-            rorg:_rorg,
+            rorg: _rorg,
             sender_id,
-            status:_status,
+            status: _status,
             payload,
         } => {
             match get_eep(sender_id) {
@@ -410,7 +410,6 @@ pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::enocean::*;
     // ESP3 - ERP1 - EEP specified fields
     // --------------------------------------------------------------------
     #[test]
@@ -426,26 +425,6 @@ mod tests {
         let _result_payload: Vec<u8>;
 
         let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
-
-        // match &esp3_packet.data {
-        //     DataType::Erp1Data {
-        //         rorg,
-        //         sender_id,
-        //         status,
-        //         payload,
-        //     } => {
-        //         _result_sender_id = sender_id;
-        //         _result_rorg = rorg;
-        //         _result_status = status;
-        //         _result_payload = payload.clone();
-        //     }
-        //     _ => {
-        //         _result_sender_id = &[0, 1, 2, 3];
-        //         _result_rorg = &Rorg::Undefined;
-        //         _result_status = &0xFF;
-        //         _result_payload = vec![0];
-        //     }
-        // }
 
         let _eep: EEP = EEP::A50401;
 

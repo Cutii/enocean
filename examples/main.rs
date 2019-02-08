@@ -1,11 +1,8 @@
-use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
-use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 extern crate enocean;
-use enocean::eep::*;
 use enocean::enocean::*;
 
 fn main() {
@@ -21,19 +18,22 @@ fn main() {
 
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
-    let enocean_listener = thread::spawn(move || {
+    let _enocean_listener = thread::spawn(move || {
         enocean::communicator::listen(port_name, enocean_emiter, enocean_commander);
     });
 
     // Create a thread to send commands every second
-    let command_emiter = thread::spawn(move || loop {
-        enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
+    let _command_emiter = thread::spawn(move || loop {
+        match enocean_command_receiver.send(enocean::eep::create_smart_plug_command(
             [0x05, 0x0a, 0x3d, 0x6a],
             enocean::eep::D201CommandList::QueryPower,
-        ));
+        )) {
+            Ok(_t) => {}
+            Err(e) => eprintln!("erreur lors de l'envoi : {:?}", e),
+        }
         nb_sended = nb_sended + 1;
         println!("---> SENDED : {}", nb_sended);
-        thread::sleep(Duration::from_millis(1000));
+        thread::sleep(Duration::from_millis(10000));
     });
 
     // Loop to check if we received something. If everything went well during "send phase",
