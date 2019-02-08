@@ -175,7 +175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "enocean"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serialport 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
