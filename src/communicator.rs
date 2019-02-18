@@ -73,7 +73,7 @@ pub fn listen(
                                     // If it's the "first part"
                                     ParseEspErrorKind::IncompleteMessage => {
                                         // We save it for next incomming telegram parsing
-                                        println!("Saving : {:x?}", e.packet);
+                                        // println!("Saving : {:x?}", e.packet);
                                         incomplete_serial_buf = Some(e.packet);
                                     }
                                     // If it's the "second part"
