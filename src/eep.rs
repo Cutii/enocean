@@ -24,7 +24,7 @@ pub fn parse_erp1_payload(esp: &ESP3) -> ParseEspResult<HashMap<String, String>>
                     return Err(ParseEspError {
                         message: String::from("Unknown EEP"),
                         byte_index: None,
-                        packet: enocean_message_of_esp3(esp),
+                        packet: Vec::from(esp),
                         kind: ParseEspErrorKind::Unimplemented,
                     })
                 }
@@ -32,7 +32,7 @@ pub fn parse_erp1_payload(esp: &ESP3) -> ParseEspResult<HashMap<String, String>>
         }
         _ => Err(ParseEspError {
             message: String::from("Unknown or Unimplemented yet packet type"),
-            packet: enocean_message_of_esp3(esp),
+            packet: Vec::from(esp),
             byte_index: Some(6),
             kind: ParseEspErrorKind::Unimplemented,
         }),

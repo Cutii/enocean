@@ -39,6 +39,7 @@
 
 use std::vec::Vec;
 
+
 use crate::*;
 
 /// Simply clone the given u8 vector in an EnoceaMessage type variable
@@ -136,9 +137,9 @@ impl fmt::Display for ESP3 {
         }
     }
 }
-
 /// Function to transform an ESP3 packet to an u8 vector.
-pub fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
+impl From<&ESP3> for Vec<u8> {
+    fn from(esp3 : &ESP3) -> Vec<u8> {
     let mut esp3_vector: EnoceanMessage = vec![0x55];
     esp3_vector.push((esp3.data_length >> 8) as u8);
     esp3_vector.push((esp3.data_length) as u8);
@@ -191,6 +192,7 @@ pub fn enocean_message_of_esp3(esp3: &ESP3) -> Vec<u8> {
     };
     esp3_vector.push(esp3.crc_data);
     esp3_vector
+    }
 }
 
 /// Depending on packet_type, data and opt_data part of an ESP3 is implemented differently
