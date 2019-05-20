@@ -230,7 +230,7 @@ fn parse_d201_data(payload: &Vec<u8>) -> HashMap<String, String> {
 
 /// Micro Smart Plug Specific
 /// UTE telegram handling
-pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -> Vec<u8> {
+pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -> ParseEspResult<ESP3> {
     // Data
     let rorg = 0xd4;
     // let bidirectional_comm = [0,1];
@@ -288,11 +288,11 @@ pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -
     esp3_packet.append(&mut opt_data);
     esp3_packet.push(crc_data);
     // println!("PACKET : {:#x?}", esp3_packet);
-    esp3_packet
+    esp3_of_enocean_message(esp3_packet)
 }
 
 /// SmartPLug commands creation
-pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -> Vec<u8> {
+pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -> ParseEspResult<ESP3> {
     let mut packet: Vec<u8> = vec![0x55];
     let mut usb_gw_id: Vec<u8> = vec![0, 0, 0, 0];
     let mut data: Vec<u8> = Vec::new();
@@ -353,10 +353,10 @@ pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -
     packet.extend_from_slice(&data);
     packet.extend_from_slice(&opt_data);
     packet.push(crc_data);
-    packet
+    esp3_of_enocean_message(packet)
 }
 
-pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> Vec<u8> {
+pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> ParseEspResult<ESP3>{
     let mut result: Vec<u8> = vec![0x55];
     let mut usb_gw_id: Vec<u8> = vec![0, 0, 0, 0];
 
@@ -403,7 +403,7 @@ pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> Vec<u8> {
     result.append(&mut opt_data);
     result.push(crc_data);
 
-    result
+    esp3_of_enocean_message(result)
 }
 
 /// Unit Tests
@@ -480,12 +480,12 @@ mod tests {
     #[test]
     fn given_d2010e_valid_esp3_packet_containing_teachin_query_then_create_valid_response_packet() {
         let created_response =
-            create_smart_plug_teach_in_accepted_response_packet([0x05, 0x0a, 0x3d, 0x6a]);
+            create_smart_plug_teach_in_accepted_response_packet([0x05, 0x0a, 0x3d, 0x6a]).unwrap();
         let valid_response = vec![
             0x55, 0x0, 0xd, 0x7, 0x1, 0xfd, 0xd4, 0xd1, 0x1, 0x46, 0x0, 0xe, 0x1, 0xd2, 0x0, 0x0,
             0x0, 0x0, 0x0, 0x3, 0x5, 0xa, 0x3d, 0x6a, 0xff, 0x0, 0x6d,
         ];
-        assert_eq!(valid_response, created_response);
+        assert_eq!(valid_response, Vec::from(&created_response));
     }
 
     // Testing some util fn
