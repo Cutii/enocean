@@ -18,15 +18,15 @@
 //! For now this lib allow you to create an ESP struct from an incomming bytes vector.
 //!
 //! **Supported packet type** :
-//! [x] Radio ERP1 : 0x01
-//! [x] Response : 0x02
-//! [ ] radio_sub_tel : 0x03
-//! [ ] event : 0x04
-//! [ ] common_command : 0x05
-//! [ ] smart_ack_command : 0x06
-//! [ ] remote_man_command : 0x07
-//! [ ] radio_message : 0x09
-//! [ ] radio_advanced : 0x0a
+//!  [x]   Radio ERP1 : 0x01  
+//!  [x]   Response : 0x02  
+//!  [ ]   radio_sub_tel : 0x03  
+//!  [ ]   event : 0x04  
+//!  [ ]   common_command : 0x05  
+//!  [ ]   smart_ack_command : 0x06  
+//!  [ ]   remote_man_command : 0x07  
+//!  [ ]   radio_message : 0x09  
+//!  [ ]   radio_advanced : 0x0a  
 //!
 //! ## License
 //! [license]: #license

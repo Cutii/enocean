@@ -13,10 +13,3 @@ keywords = ["enocean", "domotic", "smarthome" ]
 
 [dependencies]
 serialport = "3.2.0"
-
-[dev-dependencies]
-criterion = "0.2"
-
-[[bench]]
-name = "parseESP3"
-harness = false
