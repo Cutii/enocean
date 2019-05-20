@@ -272,7 +272,7 @@ fn get_packet_type(em: &EnoceanMessage) -> ParseEspResult<PacketType> {
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Rorg {
     Undefined = 0xFF,
-    Rps = 0x01,
+    Rps = 0xF6,
     Bs1 = 0xD5,
     Bs4 = 0xA5,
     Vld = 0xD2,
@@ -754,6 +754,7 @@ mod tests {
 
     // F60201 when pushed :
     // [85, 0, 7, 7, 1, 122, 246, 112, 254, 245, 143, 245, 48, 1, 255, 255, 255, 255, 46, 0, 249]
+    // [85, 0, 7, 1, 108, 246, 8, 0, 0, 0, 0, 48, 3, 255, 255, 255, 255, 255, 0, 208
 
     // F60201 when released :
     // [85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 245, 32, 1, 255, 255, 255, 255, 45, 0, 139]
