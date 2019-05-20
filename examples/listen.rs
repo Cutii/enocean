@@ -22,8 +22,6 @@ fn main() {
         enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
     });
 
-    
-
     // Loop to check if we received something. If everything went well during "send phase",
     // we should receive a Reponse type ESP3 packet with ReturnCode 0 each time we send a command.
     loop {

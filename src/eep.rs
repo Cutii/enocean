@@ -55,6 +55,11 @@ pub enum D201CommandList {
     QueryPower,
     DefaultConfig,
 }
+/// These F602 (eg. PTM) messages emulation are supported by this lib
+pub enum F602EmulateCommand {
+    MoveBlindClosed,
+    MoveBlindOpen
+}
 
 /// Link between EnOcean ID and EEP. This part has to be improved (stock EEP<->ID somehow)...
 pub fn get_eep(id: &[u8; 4]) -> Option<EEP> {
@@ -81,7 +86,9 @@ fn bits_of_byte(byte: u8) -> [bool; 8] {
     }
     value
 }
-
+// ---------------------------------------------------------------------//
+// ---------------- Enocean Message parsing ----------------------------//
+// ---------------------------------------------------------------------//
 /// Specific parsing function for Temperature and humidity sensor
 fn parse_a50401_data(payload: &Vec<u8>) -> HashMap<String, String> {
     let mut parsed = HashMap::new();
@@ -118,7 +125,6 @@ fn parse_d50001_data(payload: &Vec<u8>) -> HashMap<String, String> {
     };
     parsed
 }
-
 /// Specific parsing function for pushbutton
 fn parse_f60201_data(payload: &Vec<u8>) -> HashMap<String, String> {
     let mut result = HashMap::new();
@@ -161,7 +167,6 @@ fn parse_f60202_data(payload: &Vec<u8>) -> HashMap<String, String> {
     };
     result
 }
-
 /// Specific parsing function for micro smart plug
 fn parse_d201_data(payload: &Vec<u8>) -> HashMap<String, String> {
     // First we have to get CMD_ID:
@@ -228,8 +233,62 @@ fn parse_d201_data(payload: &Vec<u8>) -> HashMap<String, String> {
     parsed
 }
 
-/// Micro Smart Plug Specific
-/// UTE telegram handling
+// ------------------------------------------------------------------------//
+// ---------------- Enocean Message Generation ----------------------------//
+// ------------------------------------------------------------------------//
+/// Generic message 
+pub fn create_f60201_telegram(command: F602EmulateCommand)->ParseEspResult<ESP3> {
+    let mut packet: Vec<u8> = vec![0x55];
+    let usb_gw_id: Vec<u8> = vec![0, 0, 0, 0];
+    let mut data: Vec<u8> = Vec::new();
+    // |  DB0.0 	        |   DB0.1 to DB0.3	       |   DB0.4	            |   DB0.5 to DB0.7	        |  
+    // |---	                |---	                   |---	                    |---	                    |  
+    // |  No Second action 	|  No Rocker Second Actio  |  Energy bow pressed  	|  Rocker 1st Action 	    |  
+    // |  0 	            |   000	                   |  1                  	|   000 for close 001 for open	|  
+    
+    data.push(0xf6); // choice
+    match command {
+        F602EmulateCommand::MoveBlindClosed => {
+            data.extend_from_slice(&[0x08]); 
+        },
+        F602EmulateCommand::MoveBlindOpen =>{
+            data.extend_from_slice(&[0x09]);      
+        }
+    }
+    data.extend_from_slice(&usb_gw_id);
+    data.push(0x30); //status T21 NU to 1 
+    let data_length: u8 = data.len() as u8;
+
+    // OPT_DATA
+    let mut opt_data: Vec<u8> = vec![0x03];
+    opt_data.extend_from_slice(&[0xff,0xff,0xff,0xff]);
+    opt_data.push(0xff);
+    opt_data.push(0x00);
+    let opt_len: u8 = opt_data.len() as u8;
+
+    // HEADER
+    let mut header: Vec<u8> = Vec::new();
+    header.push(0x00); //data length MSB
+    header.push(opt_len);
+    header.push(data_length);
+    header.push(0x01); //packet type radio
+
+    // CRCs
+    let crc_header = compute_crc8(&header);
+    println!("{}",crc_header);
+    data.append(&mut opt_data);
+    let crc_data = compute_crc8(&data);
+    println!("{}",crc_data);
+
+    packet.extend_from_slice(&header);
+    packet.push(crc_header);
+    packet.extend_from_slice(&data);
+    packet.extend_from_slice(&opt_data);
+    packet.push(crc_data);
+    esp3_of_enocean_message(packet)
+}
+
+/// UTE telegram acceptation
 pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -> ParseEspResult<ESP3> {
     // Data
     let rorg = 0xd4;
@@ -290,7 +349,6 @@ pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -
     // println!("PACKET : {:#x?}", esp3_packet);
     esp3_of_enocean_message(esp3_packet)
 }
-
 /// SmartPLug commands creation
 pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -> ParseEspResult<ESP3> {
     let mut packet: Vec<u8> = vec![0x55];
@@ -355,7 +413,7 @@ pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -
     packet.push(crc_data);
     esp3_of_enocean_message(packet)
 }
-
+/// Config a D2010E micro smart plug 
 pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> ParseEspResult<ESP3>{
     let mut result: Vec<u8> = vec![0x55];
     let mut usb_gw_id: Vec<u8> = vec![0, 0, 0, 0];
@@ -410,7 +468,7 @@ pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> ParseEspRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    // ESP3 - ERP1 - EEP specified fields
+    // ESP3 - ERP1 - EEP specified fields PARSING
     // --------------------------------------------------------------------
     #[test]
     fn given_valid_a50401_esp3_packet_and_its_eep_then_parse_all_data_when_learn_button_not_pressed(
@@ -475,6 +533,21 @@ mod tests {
         assert_eq!(results.get("MV").unwrap(), &String::from("19"));
         assert_eq!(results.get("UN").unwrap(), &String::from("Power[W]"));
     }
+    // ESP3 - ERP1 - EEP specified fields EMULATION
+    // --------------------------------------------------------------------
+    #[test]
+    fn given_f60201_valid_status_then_create_valid_f60201_packet() {
+        let created_response_close =
+            create_f60201_telegram(F602EmulateCommand::MoveBlindClosed).unwrap();
+        let valid_response_close = vec![
+            0x55, 0x0, 0x07, 0x7, 0x1, 122, 
+            0xf6, 0x08, 0x00,0x00,0x00,0x00,0x30, 
+            0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0, 208
+        ];
+        
+        assert_eq!(valid_response_close, Vec::from(&created_response_close));
+    }
+
     // UTE TeachIn Payload parsing // response (brut version)
     // --------------------------------------------------------------------
     #[test]
