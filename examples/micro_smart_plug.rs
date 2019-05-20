@@ -3,7 +3,6 @@ use std::thread;
 use std::time::Duration;
 
 extern crate enocean;
-use enocean::enocean::*;
 
 
 fn main() {

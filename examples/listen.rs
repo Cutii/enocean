@@ -3,18 +3,16 @@ use std::thread;
 use std::time::Duration;
 
 extern crate enocean;
-use enocean::enocean::*;
 
 fn main() {
     // Just to show how much enocean serial packets were received
     let mut nb_received = 0;
-    // Just to show how much enocean serial packets were sended
-    let mut nb_sended = 0;
+    
     // For now, this variable is hardcoded
     let port_name = "/dev/tty.usbserial-FT1ZKA73".to_string(); //Get this from env?
                                                                // Communication channels based on MPSC (1 to send, 1 to receive esp3 packets)
     let (enocean_emiter, enocean_event_receiver) = mpsc::channel();
-    let (enocean_command_receiver, enocean_commander) = mpsc::channel();
+    let (_enocean_command_receiver, enocean_commander) = mpsc::channel();
 
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
