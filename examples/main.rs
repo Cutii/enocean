@@ -41,7 +41,7 @@ fn main() {
         let message = enocean_communicator.enocean_receiver.lock().unwrap().try_recv();
         match message {
             Ok(esp3_packet) => {
-                print_esp3(esp3_packet);
+                println!{"Received ESP3 packet : {}", esp3_packet};
                 nb_received = nb_received + 1;
                 println!("---> RECEIVED : {}", nb_received);
             }

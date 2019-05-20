@@ -1,4 +1,4 @@
-//!  # locEnocean implementation for the Rust Programming Language
+//!  # Enocean implementation for the Rust Programming Language
 //!
 //! Enocean : ([official website](https://www.enocean.com/en/)) is a Radio protocol for Smart Home / Buildings devices.
 //!
@@ -42,7 +42,7 @@ use std::vec::Vec;
 use crate::*;
 
 /// Simply clone the given u8 vector in an EnoceaMessage type variable
-pub fn get_raw_message(em: EnoceanMessage) -> EnoceanMessage {
+pub fn get_raw_message(em: Vec<u8>) -> EnoceanMessage {
     em.clone()
 }
 ///  Main structure that represent an EnOcean Serial Packet according to ESP3 :  
@@ -104,37 +104,35 @@ pub struct ESP3 {
     crc_header: u8,
     crc_data: u8,
 }
-
 /// Util function to display packet information. Maybe we have to impl display for ESP3 instead ?
-pub fn print_esp3(u: ESP3) {
-    match &u.data {
-        DataType::Erp1Data {
-            rorg,
-            sender_id,
-            status,
-            payload,
-        } => {
-            println!("New {:X?} radio message from: {:X?} ", rorg, sender_id);
-            println!("Status {:X?} Payload: {:X?} ", status, payload);
-            println!(
-                "{:#X?}",
-                enocean::eep::parse_erp1_payload(&u).unwrap_or_default()
-            );
-        }
-        DataType::ResponseData {
-            return_code,
-            response_payload,
-        } => {
-            println!("Response from TCM300 with RC : {:X?}", *return_code as u8);
-            match response_payload {
-                Some(ref payload) => {
-                    println!("And Payload: {:X?}", payload);
-                }
-                None => {}
+impl fmt::Display for ESP3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self.data {
+            DataType::Erp1Data {
+                rorg,
+                sender_id,
+                status,
+                payload,
+            } => {
+                write!(f,"{:X?} radio message from: {:X?} with Status {:X?} and Payload: {:X?}. \n Parsed Payload : \n {:#X?}"
+                , rorg, sender_id, status, payload, enocean::eep::parse_erp1_payload(self).unwrap_or_default())
             }
-        }
-        DataType::RawData { raw_data } => {
-            println!("Unknow message: {:X?}", raw_data);
+            DataType::ResponseData {
+                return_code,
+                response_payload,
+            } => {
+                match response_payload {
+                    Some(payload) => {
+                        write!(f,"Response from TCM300 with RC : {:X?}. Optionnal payload : {:X?}", *return_code as u8, payload )
+                    }
+                    None => {
+                            write!(f,"Response from TCM300 with RC : {:X?} and no payload", *return_code as u8 )
+                    }
+                }
+            }
+            DataType::RawData { raw_data } => {
+                write!(f,"Unknow message: {:X?}", raw_data)
+            }
         }
     }
 }
