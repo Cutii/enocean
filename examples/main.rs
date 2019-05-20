@@ -19,7 +19,7 @@ fn main() {
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
     let _enocean_listener = thread::spawn(move || {
-        enocean::communicator::listen(port_name, enocean_emiter, enocean_commander);
+        enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
     });
 
     // Create a thread to send commands every second

@@ -16,7 +16,7 @@ fn main() {
     let (enocean_command_receiver, enocean_commander) = mpsc::channel();
 
     let _enocean_listener = thread::spawn(move || {
-        enocean::communicator::listen(port_name, enocean_emiter, enocean_commander);
+        enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
     });
 
     let _command_emiter = thread::spawn(move || loop {

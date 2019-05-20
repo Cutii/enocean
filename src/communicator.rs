@@ -10,7 +10,7 @@ use std::sync::mpsc;
 
 use crate::ParseEspErrorKind;
 
-pub fn listen(
+pub fn start(
     port_name: String,
     enocean_event: mpsc::Sender<ESP3>,
     enocean_command: mpsc::Receiver<Vec<u8>>,
