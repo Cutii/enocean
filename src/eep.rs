@@ -241,18 +241,14 @@ pub fn create_f60201_telegram(command: F602EmulateCommand)->ParseEspResult<ESP3>
     let mut packet: Vec<u8> = vec![0x55];
     let usb_gw_id: Vec<u8> = vec![0, 0, 0, 0];
     let mut data: Vec<u8> = Vec::new();
-    // |  DB0.0 	        |   DB0.1 to DB0.3	       |   DB0.4	            |   DB0.5 to DB0.7	        |  
-    // |---	                |---	                   |---	                    |---	                    |  
-    // |  No Second action 	|  No Rocker Second Actio  |  Energy bow pressed  	|  Rocker 1st Action 	    |  
-    // |  0 	            |   000	                   |  1                  	|   000 for close 001 for open	|  
     
     data.push(0xf6); // choice
     match command {
         F602EmulateCommand::MoveBlindClosed => {
-            data.extend_from_slice(&[0x08]); 
+            data.extend_from_slice(&[0x10]); 
         },
         F602EmulateCommand::MoveBlindOpen =>{
-            data.extend_from_slice(&[0x09]);      
+            data.extend_from_slice(&[0x30]);      
         }
     }
     data.extend_from_slice(&usb_gw_id);
