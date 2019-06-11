@@ -14,7 +14,7 @@ pub fn start(
     port_name: String,
     enocean_event: mpsc::Sender<ESP3>,
     enocean_command: mpsc::Receiver<ESP3>,
-) {
+) -> Result<(), std::io::Error>{
     // Set settings as mentioned in ESP3
     let mut settings: SerialPortSettings = Default::default();
     settings.timeout = Duration::from_millis(100);
@@ -29,7 +29,6 @@ pub fn start(
         Ok(mut reader) => {
             let mut serial_buf: Vec<u8> = vec![0; 100];
             let mut incomplete_serial_buf: Option<Vec<u8>> = None;
-
             println!("Receiving data on {}:", &port_name);
             // ENOCEAN COMMAND SEND (if any)
             loop {
@@ -118,9 +117,12 @@ pub fn start(
                                 }
                             }
                         }
-                    }
+                    },
                     Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
-                    Err(e) => eprintln!("{:?}", e),
+                    Err(e) => {
+                        eprintln!("Error while trying to read serial port input buffer : {:?}", e);
+                        return Err(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
+                     } ,
                 }
             } // LOOP END
         }
@@ -138,8 +140,7 @@ pub fn start(
             } else {
                 print!("Error listing serial ports");
             }
-
-            ::std::process::exit(1);
+            return Err(std::io::Error::new(std::io::ErrorKind::NotConnected, e.to_string()))
         }
     }
 }

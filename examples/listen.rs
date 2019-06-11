@@ -17,7 +17,9 @@ fn main() {
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
     let _enocean_listener = thread::spawn(move || {
-        enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
+        if let Err(e) = enocean::communicator::start(port_name, enocean_emiter, enocean_commander){
+            println!("ERROR when oopening serial port : {:?}",e );
+        }
     });
 
     // Loop to check if we received something. If everything went well during "send phase",
@@ -26,13 +28,17 @@ fn main() {
         let message = enocean_event_receiver.try_recv();
         match message {
             Ok(esp3_packet) => {
+
                 println!{"Received ESP3 packet : {}", esp3_packet};
 
                 nb_received = nb_received + 1;
                 println!("---> RECEIVED : {}", nb_received);
             }
             Err(ref e) if e == &std::sync::mpsc::TryRecvError::Empty => (),
-            Err(e) => eprintln!("{:?}", e),
+            Err(e) => {
+                eprintln!("Error while receiving encoean message from mpsc sender : {:?}", e);
+                return()
+            },
         }
         thread::sleep(Duration::from_millis(10));
     }
