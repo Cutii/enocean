@@ -28,6 +28,19 @@ fn main() {
             enocean::eep::D201CommandList::QueryPower, // QueryEnergy, Off, On
         ).unwrap();
         
+         // Create command to query power of the micro smart plug
+    let power_off = enocean::eep::create_smart_plug_command(
+            [0x05, 0x0a, 0x3d, 0x6a],
+            enocean::eep::D201CommandList::Off, // QueryEnergy, Off, On
+        ).unwrap();
+
+             // Create command to query power of the micro smart plug
+    let power_on = enocean::eep::create_smart_plug_command(
+            [0x05, 0x0a, 0x3d, 0x6a],
+            enocean::eep::D201CommandList::On, // QueryEnergy, Off, On
+        ).unwrap();
+        
+
         
     // If command is valid, create a thread to send it periodically 
     let _command_emiter = thread::spawn(move || loop {
@@ -36,8 +49,23 @@ fn main() {
             Err(e) => eprintln!("erreur lors de l'envoi : {:?}", e),
         }
         nb_sended = nb_sended + 1;
+        thread::sleep(Duration::from_millis(1000));
+        match enocean_command_receiver.send(power_off.clone()) {
+            Ok(_t) => {}
+            Err(e) => eprintln!("erreur lors de l'envoi : {:?}", e),
+        }
+        nb_sended = nb_sended + 1;
+        thread::sleep(Duration::from_millis(1000));
+
+        match enocean_command_receiver.send(power_on.clone()) {
+            Ok(_t) => {}
+            Err(e) => eprintln!("erreur lors de l'envoi : {:?}", e),
+        }
+        nb_sended = nb_sended + 1;
+        thread::sleep(Duration::from_millis(1000));
+
         println!("---> SENDED : {}", nb_sended);
-        thread::sleep(Duration::from_millis(10000));
+        thread::sleep(Duration::from_millis(3000));
         });
      
 
