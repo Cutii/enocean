@@ -1,6 +1,6 @@
 [package]
 name = "enocean"
-version = "0.2.6"
+version = "0.2.56"
 authors = ["pmirabel"]
 edition = "2018"
 description = "EnOcean serial protocol implementation."
