@@ -1,6 +1,6 @@
 [package]
 name = "enocean"
-version = "0.2.53"
+version = "0.2.6"
 authors = ["pmirabel"]
 edition = "2018"
 description = "EnOcean serial protocol implementation."
@@ -12,4 +12,4 @@ documentation = "https://docs.rs/enocean/"
 keywords = ["enocean", "domotic", "smarthome" ]
 
 [dependencies]
-serialport = "3.2.0"
+serialport = "3.3.0"
