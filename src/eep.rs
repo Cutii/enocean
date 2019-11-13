@@ -66,6 +66,7 @@ pub fn get_eep(id: &[u8; 4]) -> Option<EEP> {
     match id {
         [5, 17, 114, 247] => Some(EEP::A50401),
         [254, 245, 143, 245] => Some(EEP::F60201),
+        [0xFE, 0xF7, 0x91, 0x7C] => Some(EEP::F60201),
         [0, 49, 192, 249] => Some(EEP::F60202),
         [0x05, 0x0a, 0x3d, 0x6a] => Some(EEP::D2010E),
         [0x01, 0x92, 0x3d, 0xa8] => Some(EEP::D50001),
