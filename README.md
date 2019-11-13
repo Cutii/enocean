@@ -11,6 +11,15 @@ You can use this library with any compatible EnOcean Radio Gateway eg. [USB300 g
 
 ## Example    
 *cargo run --example main*   
+NB: You will have to specify the serialport corresponding to your enocean dongle. If you don't want to bother with that, juste create an UDEV rule ( here for an USB300 ) :  
+`sudo nano /etc/udev/rules.d/99-usb-serial.rules`
+and append : 
+`SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="ttyUsb300",MODE ="0666", GROUP="dialout"` 
+Note that you will have to add your user to the `dialout` group.  
+Finally, you can trigger the UDev rules with :   
+`sudo udevadm control --reload-rules && sudo udevadm trigger`
+
+
          
 ## Feature Overview           
          
