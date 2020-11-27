@@ -29,18 +29,18 @@ pub fn start(
         Ok(mut reader) => {
             let mut serial_buf: Vec<u8> = vec![0; 100];
             let mut incomplete_serial_buf: Option<Vec<u8>> = None;
-            println!("Receiving data on {}:", &port_name);
+            // println!("Receiving data on {}:", &port_name);
             // ENOCEAN COMMAND SEND (if any)
             loop {
                 let packet_to_send = enocean_command.try_recv();
                 match packet_to_send {
                     Ok(packet) => {
-                        println!("sending packet : {:?}", packet);
+                        // println!("sending packet : {:?}", packet);
                         // Convert ESP3 to u8
                         let bytes_to_send = Vec::from(&packet);
                         match reader.write(&bytes_to_send[..]) {
                             Ok(_) => {
-                                print!(".");
+                                // print!(".");
                                 std::io::stdout().flush().unwrap();
                             }
                             Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
