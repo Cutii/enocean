@@ -18,27 +18,27 @@ fn main() {
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
     let _enocean_listener = thread::spawn(move || {
-        enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
+        enocean::communicator::start(port_name, enocean_emiter, enocean_commander).expect("Unable to start communicator thread");
     });
 
     // Create command to query power of the micro smart plug
     let power_query = enocean::eep::create_smart_plug_command(
         [0x05, 0x0a, 0x3d, 0x6a],
-        enocean::eep::D201CommandList::QueryPower, // QueryEnergy, Off, On
+        enocean::eep::D201CommandList::QueryPower, 
     )
     .unwrap();
 
     // Create command to query power of the micro smart plug
     let power_off = enocean::eep::create_smart_plug_command(
         [0x05, 0x0a, 0x3d, 0x6a],
-        enocean::eep::D201CommandList::Off, // QueryEnergy, Off, On
+        enocean::eep::D201CommandList::Off, 
     )
     .unwrap();
 
     // Create command to query power of the micro smart plug
     let power_on = enocean::eep::create_smart_plug_command(
         [0x05, 0x0a, 0x3d, 0x6a],
-        enocean::eep::D201CommandList::On, // QueryEnergy, Off, On
+        enocean::eep::D201CommandList::On, 
     )
     .unwrap();
 

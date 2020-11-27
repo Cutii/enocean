@@ -221,8 +221,8 @@ fn parse_d201_data(payload: &Vec<u8>) -> HashMap<String, String> {
                 String::from("OV"),
                 String::from("Output value : 1 to 100% or ON"),
             ),
-            0x01...0x64 => parsed.insert(String::from("OV"), String::from("Not used")),
-            0x65...0x7E => parsed.insert(
+            0x01..=0x64 => parsed.insert(String::from("OV"), String::from("Not used")),
+            0x65..=0x7E => parsed.insert(
                 String::from("OV"),
                 String::from("Output value not valid / not set"),
             ),
@@ -272,10 +272,10 @@ pub fn create_f60201_telegram(command: F602EmulateCommand)->ParseEspResult<ESP3>
 
     // CRCs
     let crc_header = compute_crc8(&header);
-    println!("{}",crc_header);
+    // println!("{}",crc_header);
     data.append(&mut opt_data);
     let crc_data = compute_crc8(&data);
-    println!("{}",crc_data);
+    // println!("{}",crc_data);
 
     packet.extend_from_slice(&header);
     packet.push(crc_header);

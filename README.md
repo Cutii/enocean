@@ -10,7 +10,7 @@ You can use this library with any compatible EnOcean Radio Gateway eg. [USB300 g
 :warning: **This lib is still under construction** :warning:       
 
 ## Example    
-*cargo run --example main*   
+*cargo run --example listen*   
 NB: You will have to specify the serialport corresponding to your enocean dongle. If you don't want to bother with that, juste create an UDEV rule ( here for an USB300 ) :    
 `sudo nano /etc/udev/rules.d/99-usb-serial.rules`
 and append :   
