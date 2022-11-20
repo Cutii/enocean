@@ -356,7 +356,7 @@ const CRC_TABLE: [u8; 256] = [
 ];
 /// Simple implementation as described in the ESP3 protocol
 /// Allow to check the integrity of a message
-pub fn compute_crc8(msg: &Vec<u8>) -> u8 {
+pub fn compute_crc8(msg: &[u8]) -> u8 {
     let mut checksum = 0;
     for byte in msg.iter() {
         checksum = CRC_TABLE[(checksum & 0xFF ^ byte & 0xFF) as usize];
@@ -381,6 +381,20 @@ pub fn compute_crc8(msg: &Vec<u8>) -> u8 {
 /// | Size (Byte) |        1      |         1              |       4        |   1      |      
 /// |-------------|---------------|------------------------|----------------|----------|   
 /// | Content     | Rorg (0xD5)   | Data payload as EEP*   | Sender ID      | Status   |   
+
+impl ESP3 {
+    fn read(mut reader: impl std::io::Read) -> Result<ESP3, PacketReadError> {
+        let mut header = [0; 6];
+        reader.read_exact(&mut header)?;
+
+        if header[0] != 0x55 { return Err(PacketReadError::NoSyncByte) }
+
+        let crc_header = header[5];
+
+        todo!()
+
+    }
+}
 
 pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
     // Make some verifications about the received message
