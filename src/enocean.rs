@@ -98,7 +98,7 @@ pub fn get_raw_message(em: Vec<u8>) -> EnoceanMessage {
 pub struct ESP3 {
     // ESP3 packet structure, data and opt-data depend on packet_type
     data_length: u16,
-    optionnal_data_length: u8,
+    optional_data_length: u8,
     packet_type: PacketType,
     pub data: DataType,
     opt_data: Option<OptDataType>,
@@ -143,7 +143,7 @@ impl From<&ESP3> for Vec<u8> {
     let mut esp3_vector: EnoceanMessage = vec![0x55];
     esp3_vector.push((esp3.data_length >> 8) as u8);
     esp3_vector.push((esp3.data_length) as u8);
-    esp3_vector.push(esp3.optionnal_data_length);
+    esp3_vector.push(esp3.optional_data_length);
     esp3_vector.push(esp3.packet_type as u8);
     esp3_vector.push(esp3.crc_header);
 
@@ -414,10 +414,10 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
 
     // As header seems OK, we can parse data and opt_data length fields :
     let data_length: u16 = (em[1] as u16) << 8 | em[2] as u16;
-    let optionnal_data_length: u8 = em[3];
+    let optional_data_length: u8 = em[3];
 
     // And so we can check header and data length :
-    if em.len() < (data_length as usize + optionnal_data_length as usize + 7) {
+    if em.len() < (data_length as usize + optional_data_length as usize + 7) {
         return Err(ParseEspError {
             message: String::from("Packet length error"),
             byte_index: None,
@@ -426,12 +426,12 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         });
     }
     let crc_data =
-        compute_crc8(&em[6..6 + data_length as usize + optionnal_data_length as usize].to_vec());
+        compute_crc8(&em[6..6 + data_length as usize + optional_data_length as usize].to_vec());
     // And DATA CRC :
-    if crc_data != em[6 + data_length as usize + optionnal_data_length as usize] {
+    if crc_data != em[6 + data_length as usize + optional_data_length as usize] {
         return Err(ParseEspError {
             message: String::from("CRC Data Error"),
-            byte_index: Some(em[6 + data_length as usize + optionnal_data_length as usize] as i16),
+            byte_index: Some(em[6 + data_length as usize + optional_data_length as usize] as i16),
             packet: em,
             kind: ParseEspErrorKind::CrcMismatch,
         });
@@ -487,7 +487,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
                     };
                     opt_data = Some(OptDataType::RawData {
                         raw_data: em[6 + data_length as usize
-                            ..6 + data_length as usize + optionnal_data_length as usize]
+                            ..6 + data_length as usize + optional_data_length as usize]
                             .to_vec(),
                     })
                 }
@@ -506,7 +506,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
     // Return an Ok(ESP3)
     Ok(ESP3 {
         data_length,
-        optionnal_data_length,
+        optional_data_length,
         packet_type,
         data,
         opt_data,
@@ -533,7 +533,7 @@ mod tests {
         let packet_type = PacketType::RadioErp1;
         let result = esp3_of_enocean_message(received_message).unwrap();
         assert_eq!(data_length, result.data_length);
-        assert_eq!(optionnal_length, result.optionnal_data_length);
+        assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
     }
     #[test]
@@ -547,7 +547,7 @@ mod tests {
         let packet_type = PacketType::RadioErp1;
         let result = esp3_of_enocean_message(received_message).unwrap();
         assert_eq!(data_length, result.data_length);
-        assert_eq!(optionnal_length, result.optionnal_data_length);
+        assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
     }
     #[test]
@@ -580,7 +580,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         let data_length: u16 = 7;
-        let optionnal_data_length: u8 = 7;
+        let optional_data_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
         let crc_header: u8 = 122;
         let crc_data: u8 = 39;
@@ -600,7 +600,7 @@ mod tests {
         });
         let esp_packet = ESP3 {
             data_length,
-            optionnal_data_length,
+            optional_data_length,
             packet_type: packet_type,
             data,
             opt_data,
