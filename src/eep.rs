@@ -221,8 +221,8 @@ fn parse_d201_data(payload: &Vec<u8>) -> HashMap<String, String> {
                 String::from("OV"),
                 String::from("Output value : 1 to 100% or ON"),
             ),
-            0x01...0x64 => parsed.insert(String::from("OV"), String::from("Not used")),
-            0x65...0x7E => parsed.insert(
+            0x01..=0x64 => parsed.insert(String::from("OV"), String::from("Not used")),
+            0x65..=0x7E => parsed.insert(
                 String::from("OV"),
                 String::from("Output value not valid / not set"),
             ),
