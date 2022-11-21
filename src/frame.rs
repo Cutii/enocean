@@ -136,7 +136,7 @@ impl<'a> ESP3FrameRef<'a> {
         let mut header = [0x55, data_high, data_low, opt_len, self.packet_type, 0];
 
         // CRC the header
-        header[5] = CRC8::from(&header[..5]).into();
+        header[5] = CRC8::from(&header[1..5]).into();
         writer.write_all(&header[..])?;
 
         // CRC the payload
