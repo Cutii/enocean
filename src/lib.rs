@@ -3,10 +3,14 @@ extern crate serialport;
 use std::error::Error as StdError;
 use std::fmt;
 
+use thiserror::Error;
+
 // Differents file which should be linked
 pub mod communicator;
+pub mod crc8;
 pub mod eep;
 pub mod enocean;
+pub mod frame;
 
 /// Custom Result type = std::result::Result<T, ParseEspError>
 type ParseEspResult<T> = std::result::Result<T, ParseEspError>;
@@ -30,6 +34,14 @@ pub enum ParseEspErrorKind {
     CrcMismatch,
     IncompleteMessage,
     Unimplemented,
+}
+
+#[derive(Debug, Error)]
+pub enum PacketReadError {
+    #[error("IO Error")]            IOError(#[from] std::io::Error),
+    #[error("End of Stream")]       EOF,
+    #[error("Bad CRC for data")]    DataCRC(u8),
+    #[error("Unknown packet type")] UnknownPacketType(u8),
 }
 
 impl fmt::Display for ParseEspError {

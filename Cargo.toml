@@ -1,8 +1,8 @@
 [package]
 name = "enocean"
 version = "0.2.56"
-authors = ["pmirabel"]
-edition = "2018"
+authors = ["pmirabel", "Maxime Augier <max@xolus.net>"]
+edition = "2021"
 description = "EnOcean serial protocol implementation."
 license = "MIT AND Apache-2.0"
 readme = "README.md"
@@ -12,4 +12,6 @@ documentation = "https://docs.rs/enocean/"
 keywords = ["enocean", "domotic", "smarthome" ]
 
 [dependencies]
+num_enum = "0.5.7"
 serialport = "4.2.0"
+thiserror = "1.0.37"
