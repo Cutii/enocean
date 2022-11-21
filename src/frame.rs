@@ -12,7 +12,7 @@ use std::borrow::Borrow;
 use crate::FrameReadError;
 use crate::crc8::{compute_crc8, CRC8};
 
-/// An owned ESP3 frame that has been CRC-checked.
+/// An owned ESP3 frame that has been CRC-checked. Includes synchronization byte and CRCs.
 #[derive(Clone, Debug)]
 pub struct ESP3Frame {
     packet_type: u8,
@@ -104,6 +104,10 @@ impl Borrow<[u8]> for ESP3Frame {
     fn borrow(&self) -> &[u8] {
         &self.frame
     }
+}
+
+impl<'a> From<ESP3FrameRef<'a>> for ESP3Frame {
+    fn from(value: ESP3FrameRef<'a>) -> Self { value.to_owned() }
 }
 
 impl<'a> ESP3FrameRef<'a> {
