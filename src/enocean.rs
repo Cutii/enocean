@@ -37,8 +37,7 @@
 //! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
 //!
 
-use std::vec::Vec;
-
+use num_enum::{TryFromPrimitive, IntoPrimitive};
 
 use crate::*;
 
@@ -228,7 +227,8 @@ pub enum OptDataType {
 
 /// Simple implementation of EnOcean packet type for ESP3 packet
 /// Supported packet type for now : Radio_ERP1, Response
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 enum PacketType {
     RadioErp1 = 0x01,
     Response = 0x02,
@@ -244,32 +244,23 @@ enum PacketType {
     Radio802_15_4 = 0x10,
     Command2_4 = 0x11,
 }
+
 /// Given an packet type u8 value, return the corresponding PacketType
 fn get_packet_type(em: &[u8]) -> ParseEspResult<PacketType> {
-    match em[4] {
-        0x01 => Ok(PacketType::RadioErp1),
-        0x02 => Ok(PacketType::Response),
-        // Unimplemented at the moment :
-        0x03 => Ok(PacketType::RadioSubTel),
-        0x04 => Ok(PacketType::Event),
-        0x05 => Ok(PacketType::CommonCommand),
-        0x06 => Ok(PacketType::SmartAckCommand),
-        0x07 => Ok(PacketType::RemoteManCommand),
-        0x09 => Ok(PacketType::RadioMessage),
-        0x0A => Ok(PacketType::RadioErp2),
-        0x10 => Ok(PacketType::Radio802_15_4),
-        0x11 => Ok(PacketType::Command2_4),
-        _ => Err(ParseEspError {
-            message: String::from("Invalid or unimplemented yet packet type"),
-            byte_index: Some(4),
-            packet: em.to_vec(),
-            kind: ParseEspErrorKind::Unimplemented,
-        }),
-    }
+    PacketType::try_from_primitive(em[4])
+        .map_err(|_| {
+            ParseEspError {
+                message: String::from("Invalid or unimplemented yet packet type"),
+                byte_index: Some(4),
+                packet: em.to_vec(),
+                kind: ParseEspErrorKind::Unimplemented,
+            }
+        })
 }
 
 /// Simple implementation of possible Radio Organization for a Radio ERP1 packet (from EnOcean ESP3)
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 pub enum Rorg {
     Undefined = 0xFF,
     Rps = 0xF6,
@@ -287,7 +278,8 @@ pub enum Rorg {
     SecEncaps = 0x31,
 }
 /// Simple implementation of possible Return codes for a response packet (from EnOcean ESP3)
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 pub enum ReturnCode {
     Ok = 0x00,
     Error = 0x01,
@@ -299,38 +291,14 @@ pub enum ReturnCode {
     NoFreeBuffer = 0x07,
     Undefined = 0xff,
 }
+
 fn get_return_code(rc_byte: u8) -> ReturnCode {
-    match rc_byte {
-        0x00 => ReturnCode::Ok,
-        0x01 => ReturnCode::Error,
-        0x02 => ReturnCode::NotSupported,
-        0x03 => ReturnCode::WrongParam,
-        0x04 => ReturnCode::OperationDenied,
-        0x05 => ReturnCode::LockSet,
-        0x06 => ReturnCode::BufferTooSmall,
-        0x07 => ReturnCode::NoFreeBuffer,
-        _ => ReturnCode::Undefined,
-    }
+    ReturnCode::try_from_primitive(rc_byte).unwrap_or(ReturnCode::Undefined)
 }
 
 /// Given an u8 byte containing Rorg indicator, return the corresponding Rorg variant
 fn get_radio_organization(rorg_byte: u8) -> Rorg {
-    match rorg_byte {
-        0xF6 => Rorg::Rps,
-        0xD5 => Rorg::Bs1,
-        0xA5 => Rorg::Bs4,
-        0xD2 => Rorg::Vld,
-        0xD1 => Rorg::Msc,
-        0xA6 => Rorg::Adt,
-        0xD4 => Rorg::Ute,
-        0xC6 => Rorg::SmLrnReq,
-        0xC7 => Rorg::SmLrnAns,
-        0xA7 => Rorg::SmRec,
-        0xC5 => Rorg::SysEx,
-        0x30 => Rorg::Sec,
-        0x31 => Rorg::SecEncaps,
-        _ => Rorg::Undefined,
-    }
+    Rorg::try_from_primitive(rorg_byte).unwrap_or(Rorg::Undefined)
 }
 
 /// Simple implementation as described in the ESP3 protocol
