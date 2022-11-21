@@ -1,3 +1,43 @@
+//! An incremental CRC8 implementation.
+//! 
+//! Plain function, for byte slices:
+//! ```
+//! # use enocean::crc8::*;
+//! let crc = compute_crc8(b"Hello, World!");
+//! assert_eq!(crc, 0x87);
+//! ```
+//! 
+//! If the CRC output byte is appended to the slice, the CRC of the result will be 0 if and only if
+//! the original CRC was correct:
+//!```
+//! # use enocean::crc8::*;
+//! let crc = compute_crc8(b"Hello, World!\x87");
+//! assert_eq!(crc, 0x00);
+//! ```
+//! 
+//! The new API lets you compute a CRC over several pieces:
+//! 
+//! ```
+//! # use enocean::crc8::*;
+//! let crc: u8 = CRC8::from(b"Hello")
+//!                     .extend(b", ")
+//!                     .extend(b"World!")
+//!                     .extend(b"\x87")
+//!                     .into();
+//! assert_eq!(crc, 0x00);
+//! ```
+//! 
+//! You can easily throw an error on CRC failure:
+//! 
+//! ```
+//! # use enocean::crc8::*;
+//! # #[derive(Debug)] struct MyCRCError;
+//! CRC8::from(b"Hello, World!\x87")
+//!      .ok_or(MyCRCError)?;
+//! # Ok::<(), MyCRCError>(())
+//! ```
+
+
 const CRC_TABLE: [u8; 256] = [
     0x00, 0x07, 0x0e, 0x09, 0x1c, 0x1b, 0x12, 0x15, 0x38, 0x3f, 0x36, 0x31, 0x24, 0x23, 0x2a, 0x2d,
     0x70, 0x77, 0x7e, 0x79, 0x6c, 0x6b, 0x62, 0x65, 0x48, 0x4f, 0x46, 0x41, 0x54, 0x53, 0x5a, 0x5d,
@@ -29,6 +69,12 @@ impl Into<u8> for CRC8 {
         self.state
     }
 }
+
+impl <const C: usize> From<&[u8; C]> for CRC8 {
+    fn from(value: &[u8; C]) -> Self {
+        CRC8::from(&value[..])
+    }
+} 
 
 impl From<&[u8]> for CRC8 {
     fn from(value: &[u8]) -> Self {
