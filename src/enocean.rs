@@ -647,10 +647,10 @@ mod tests {
         let valid_rorg = Rorg::Bs4;
         let valid_status = 0x00;
 
-        let mut result_sender_id: [u8; 4];
-        let mut result_rorg: Rorg;
-        let mut result_status: u8;
-        let mut result_payload: Vec<u8> = Vec::new();
+        let result_sender_id: [u8; 4];
+        let result_rorg: Rorg;
+        let result_status: u8;
+        let result_payload: Vec<u8>;
 
         match esp3_packet.data {
             DataType::Erp1Data {

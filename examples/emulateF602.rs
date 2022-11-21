@@ -1,3 +1,5 @@
+#![allow(non_snake_case)] 
+
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
@@ -16,8 +18,10 @@ fn main() {
     // Create a thread to interact (both ways) with serial port
     // The interaction is achieved thanks to 2 channels (std::sync lib)
     let _enocean_listener = thread::spawn(move || {
-        enocean::communicator::start(port_name, enocean_emiter, enocean_commander);
+        enocean::communicator::start(port_name, enocean_emiter, enocean_commander)
+            .unwrap(); // Crash thread if communicator fails
     });
+    
     let F602_emulate_close = enocean::eep::create_f60201_telegram(
         enocean::eep::F602EmulateCommand::MoveBlindClosed, // QueryEnergy, Off, On
     )
