@@ -9,7 +9,7 @@
 
 use std::borrow::Borrow;
 
-use crate::PacketReadError;
+use crate::FrameReadError;
 use crate::crc8::{compute_crc8, CRC8};
 
 /// An owned ESP3 frame that has been CRC-checked.
@@ -31,11 +31,11 @@ pub struct ESP3FrameRef<'a> {
 impl ESP3Frame {
 
     /// Read a frame from a buffered reader. Will perform header synchronization. Allocates exactly the space needed. 
-    pub fn read(reader: &mut impl std::io::BufRead) -> Result<Self, PacketReadError> {
+    pub fn read(reader: &mut impl std::io::BufRead) -> Result<Self, FrameReadError> {
       
         let header = loop {  // Synchronize with start of packet
             let buf = reader.fill_buf()?;
-            if buf.len() == 0 { return Err(PacketReadError::EOF) }
+            if buf.len() == 0 { return Err(FrameReadError::EOF) }
             if buf[0] != 0x55 {  // Look for synchronizatin byte
                 reader.consume(1);
                 continue;
@@ -65,7 +65,7 @@ impl ESP3Frame {
 
         // Check the Data CRC
         let data_crc = compute_crc8(&frame[6..]);
-        if data_crc != 0 { return Err(PacketReadError::DataCRC(data_crc)) }
+        if data_crc != 0 { return Err(FrameReadError::DataCRC{ frame, data_crc }) }
 
         Ok(ESP3Frame { frame, packet_type, data_length, optional_data_length })
 

@@ -37,11 +37,10 @@ pub enum ParseEspErrorKind {
 }
 
 #[derive(Debug, Error)]
-pub enum PacketReadError {
+pub enum FrameReadError {
     #[error("IO Error")]            IOError(#[from] std::io::Error),
     #[error("End of Stream")]       EOF,
-    #[error("Bad CRC for data")]    DataCRC(u8),
-    #[error("Unknown packet type")] UnknownPacketType(u8),
+    #[error("Bad CRC for data")]    DataCRC{ frame: Vec<u8>, data_crc: u8 },
 }
 
 impl fmt::Display for ParseEspError {
