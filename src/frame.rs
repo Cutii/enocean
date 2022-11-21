@@ -76,7 +76,7 @@ impl<'a> ESP3FrameRef<'a> {
         let data_low = (data_len & 0xff) as u8;
         let opt_len = self.optional_data.len() as u8;
 
-        let header = [0x55, data_high, data_low, opt_len, self.packet_type, 0];
+        let mut header = [0x55, data_high, data_low, opt_len, self.packet_type, 0];
 
         header[5] = CRC8::from(&header[..5]).into();
 

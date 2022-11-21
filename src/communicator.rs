@@ -72,7 +72,7 @@ pub fn start(
             Ok(t) => {
                 // If we received an incomming telegram :
                 // println!("Received telegram : {:X?} ", &serial_buf[..t]);
-                match esp3_of_enocean_message(get_raw_message(serial_buf[..t].to_vec())) {
+                match esp3_of_enocean_message(serial_buf[..t].to_vec()) {
                     Ok(esp3_packet) => {
                         // If we achieved to transform it into an ESP3 packet, send it to the main thread
                         match enocean_event.send(esp3_packet.clone()) {

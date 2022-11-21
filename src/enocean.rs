@@ -382,19 +382,6 @@ pub fn compute_crc8(msg: &[u8]) -> u8 {
 /// |-------------|---------------|------------------------|----------------|----------|   
 /// | Content     | Rorg (0xD5)   | Data payload as EEP*   | Sender ID      | Status   |   
 
-impl ESP3 {
-    fn read(mut reader: impl std::io::Read) -> Result<ESP3, PacketReadError> {
-        let mut header = [0; 6];
-        reader.read_exact(&mut header)?;
-
-        if header[0] != 0x55 { return Err(PacketReadError::NoSyncByte) }
-
-        let crc_header = header[5];
-
-        todo!()
-
-    }
-}
 
 pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
     // Make some verifications about the received message
