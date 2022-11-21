@@ -266,8 +266,8 @@ pub fn create_f60201_telegram(command: F602EmulateCommand)->ParseEspResult<ESP3>
     // HEADER
     let mut header: Vec<u8> = Vec::new();
     header.push(0x00); //data length MSB
-    header.push(opt_len);
     header.push(data_length);
+    header.push(opt_len);
     header.push(0x01); //packet type radio
 
     // CRCs
