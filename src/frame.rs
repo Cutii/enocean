@@ -12,7 +12,7 @@ use std::borrow::Borrow;
 use crate::FrameReadError;
 use crate::crc8::{compute_crc8, CRC8};
 
-/// An owned ESP3 frame that has been CRC-checked. Includes synchronization byte and CRCs.
+/// An owned ESP3 frame that has been CRC-checked. Backed by a single `Vec<u8>`,  Includes synchronization byte and CRCs.
 #[derive(Clone, Debug)]
 pub struct ESP3Frame {
     packet_type: u8,
@@ -23,8 +23,13 @@ pub struct ESP3Frame {
 
 /// Borrowed contents of an ESP3 frame. Can also be used to assemble a new frame.
 pub struct ESP3FrameRef<'a> {
+    /// The packet type. See ESP3 specification, section 1.8
     pub packet_type: u8,
+
+    /// Data payload. The size must be appropriate for the packet type.
     pub data: &'a [u8],
+
+    /// Optional payload. The size can differ from the expected size; extra fields will be ignored.
     pub optional_data: &'a [u8],
 }
 
