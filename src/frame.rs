@@ -43,7 +43,7 @@ impl ESP3Frame {
     }
 
     /// Read a frame from a buffered reader. Will perform header synchronization. Allocates exactly the space needed. 
-    pub fn read(reader: &mut impl std::io::BufRead) -> Result<Self, FrameReadError> {
+    pub fn read_from(reader: &mut impl std::io::BufRead) -> Result<Self, FrameReadError> {
       
         let header = loop {  // Synchronize with start of packet
             let buf = reader.fill_buf()?;
@@ -107,7 +107,7 @@ impl ESP3Frame {
     }
 
     /// Writes the complete frame
-    pub fn write(&self, writer: &mut impl std::io::Write) -> Result<(), std::io::Error> {
+    pub fn write_to(&self, writer: &mut impl std::io::Write) -> Result<(), std::io::Error> {
         writer.write_all(&self.frame)
     }
 }
@@ -125,7 +125,7 @@ impl<'a> From<ESP3FrameRef<'a>> for ESP3Frame {
 impl<'a> ESP3FrameRef<'a> {
 
     /// Generate and write a frame
-    pub fn write(&self, writer: &mut impl std::io::Write) -> Result<(), std::io::Error> {
+    pub fn write_to(&self, writer: &mut impl std::io::Write) -> Result<(), std::io::Error> {
 
         // Build the header
         let data_len = self.data.len() as u16;
@@ -152,7 +152,7 @@ impl<'a> ESP3FrameRef<'a> {
     // Copies the pieces of a constructed ESP3FrameRef into a single-buffer owned ESP3Frame
     pub fn to_owned(&self) -> ESP3Frame {
         let mut frame = Vec::with_capacity(6 + self.data.len() + self.optional_data.len() + 1);
-        self.write(&mut frame).unwrap();   // Writing to a preallocated Vec should never fail
+        self.write_to(&mut frame).unwrap();   // Writing to a preallocated Vec should never fail
 
         ESP3Frame { packet_type: self.packet_type, 
                     data_length: self.data.len(), 
