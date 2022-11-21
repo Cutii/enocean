@@ -245,7 +245,7 @@ enum PacketType {
     Command2_4 = 0x11,
 }
 /// Given an packet type u8 value, return the corresponding PacketType
-fn get_packet_type(em: &EnoceanMessage) -> ParseEspResult<PacketType> {
+fn get_packet_type(em: &[u8]) -> ParseEspResult<PacketType> {
     match em[4] {
         0x01 => Ok(PacketType::RadioErp1),
         0x02 => Ok(PacketType::Response),
@@ -383,14 +383,14 @@ pub fn compute_crc8(msg: &[u8]) -> u8 {
 /// | Content     | Rorg (0xD5)   | Data payload as EEP*   | Sender ID      | Status   |   
 
 
-pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
+pub fn esp3_of_enocean_message(em: &[u8]) -> ParseEspResult<ESP3> {
     // Make some verifications about the received message
     if em[0] != 0x55 {
         // EnOcean message must start by 0x55
         return Err(ParseEspError {
             message: String::from("Sync Byte Error"),
             byte_index: Some(0),
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::NoSyncByte,
         });
     } else if em.len() <= 7 {
@@ -398,7 +398,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("Invalid input message"),
             byte_index: None,
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::IncompleteMessage,
         });
     }
@@ -408,7 +408,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("CRC Error"),
             byte_index: Some(5),
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::CrcMismatch,
         });
     }
@@ -422,7 +422,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("Packet length error"),
             byte_index: None,
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::IncompleteMessage,
         });
     }
@@ -433,7 +433,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("CRC Data Error"),
             byte_index: Some(em[6 + data_length as usize + optional_data_length as usize] as i16),
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::CrcMismatch,
         });
     }
@@ -498,7 +498,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
             return Err(ParseEspError {
                 message: String::from("Packet type error / not implemented yet"),
                 byte_index: Some(4),
-                packet: em,
+                packet: em.into(),
                 kind: ParseEspErrorKind::Unimplemented,
             });
         }
@@ -532,7 +532,7 @@ mod tests {
         let data_length: u16 = 10;
         let optionnal_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(data_length, result.data_length);
         assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
@@ -546,7 +546,7 @@ mod tests {
         let data_length: u16 = 7;
         let optionnal_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(data_length, result.data_length);
         assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
@@ -558,7 +558,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         let crc_header: u8 = 122;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(crc_header, result.crc_header);
     }
     #[test]
@@ -608,7 +608,7 @@ mod tests {
             crc_header,
             crc_data,
         };
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(esp_packet, result);
     }
 
@@ -620,7 +620,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 000,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("CRC Data Error")
@@ -634,7 +634,7 @@ mod tests {
             65, 0, 235,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("Sync Byte Error")
@@ -647,7 +647,7 @@ mod tests {
             85, 0, 7, 7, 1, 000, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("CRC Error")
@@ -658,7 +658,7 @@ mod tests {
         // received_message is a valid message from a necklace pushbutton (EEP -00-01)
         let invalid_received_message = vec![85, 0, 7, 7, 1];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("Invalid input message")
@@ -673,7 +673,7 @@ mod tests {
             85, 0, 10, 7, 1, 235, 165, 0, 229, 204, 10, 5, 17, 114, 247, 0, 1, 255, 255, 255, 255,
             54, 0, 213,
         ];
-        let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet: ESP3 = esp3_of_enocean_message(&received_message).unwrap();
         let valid_sender_id: [u8; 4] = [5, 17, 114, 247];
         let valid_payload = vec![0, 229, 204, 10];
         let valid_rorg = Rorg::Bs4;
@@ -723,7 +723,7 @@ mod tests {
         received_message.extend_from_slice(&data);
         received_message.push(crc_data);
 
-        let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet: ESP3 = esp3_of_enocean_message(&received_message[..]).unwrap();
 
         let result_return_code: ReturnCode;
         let result_payload: Option<Vec<u8>>;

@@ -282,7 +282,7 @@ pub fn create_f60201_telegram(command: F602EmulateCommand)->ParseEspResult<ESP3>
     packet.extend_from_slice(&data);
     packet.extend_from_slice(&opt_data);
     packet.push(crc_data);
-    esp3_of_enocean_message(packet)
+    esp3_of_enocean_message(&packet)
 }
 
 /// UTE telegram acceptation
@@ -344,7 +344,7 @@ pub fn create_smart_plug_teach_in_accepted_response_packet(socket_id: [u8; 4]) -
     esp3_packet.append(&mut opt_data);
     esp3_packet.push(crc_data);
     // println!("PACKET : {:#x?}", esp3_packet);
-    esp3_of_enocean_message(esp3_packet)
+    esp3_of_enocean_message(&esp3_packet)
 }
 /// SmartPLug commands creation
 pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -> ParseEspResult<ESP3> {
@@ -408,7 +408,7 @@ pub fn create_smart_plug_command(socket_id: [u8; 4], command: D201CommandList) -
     packet.extend_from_slice(&data);
     packet.extend_from_slice(&opt_data);
     packet.push(crc_data);
-    esp3_of_enocean_message(packet)
+    esp3_of_enocean_message(&packet)
 }
 /// Config a D2010E micro smart plug 
 pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> ParseEspResult<ESP3>{
@@ -458,7 +458,7 @@ pub fn create_smart_plug_default_config_packet(socket_id: [u8; 4]) -> ParseEspRe
     result.append(&mut opt_data);
     result.push(crc_data);
 
-    esp3_of_enocean_message(result)
+    esp3_of_enocean_message(&result)
 }
 
 /// Unit Tests
@@ -479,7 +479,7 @@ mod tests {
         let _result_status: &u8;
         let _result_payload: Vec<u8>;
 
-        let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet = esp3_of_enocean_message(&received_message).unwrap();
 
         let _eep: EEP = EEP::A50401;
 
@@ -499,7 +499,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 112, 254, 245, 143, 245, 48, 1, 255, 255, 255, 255, 46, 0,
             249,
         ];
-        let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet = esp3_of_enocean_message(&received_message).unwrap();
         let _eep: EEP = EEP::F60201;
 
         let results = parse_erp1_payload(&esp3_packet).unwrap();
@@ -512,7 +512,7 @@ mod tests {
         let received_message = vec![
             85, 0, 7, 7, 1, 122, 246, 48, 0, 49, 192, 249, 48, 1, 255, 255, 255, 255, 51, 0, 144,
         ];
-        let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet = esp3_of_enocean_message(&received_message).unwrap();
         let results = parse_erp1_payload(&esp3_packet).unwrap();
 
         assert_eq!(results.get("R1").unwrap(), &String::from("A0"));
@@ -525,7 +525,7 @@ mod tests {
             0x6A, 0x0, 0x1, 0xFF, 0xFF, 0xFF, 0xFF, 0x3D, 0x0, 0xF1,
         ];
 
-        let esp3_packet = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet = esp3_of_enocean_message(&received_message).unwrap();
         let results = parse_erp1_payload(&esp3_packet).unwrap();
         assert_eq!(results.get("MV").unwrap(), &String::from("19"));
         assert_eq!(results.get("UN").unwrap(), &String::from("Power[W]"));
