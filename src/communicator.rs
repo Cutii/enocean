@@ -55,8 +55,8 @@ pub fn start(
                 println!("sending packet : {:?}", packet);
                 // Convert ESP3 to u8
                 let bytes_to_send = Vec::from(&packet);
-                match serial_port.write(&bytes_to_send[..]) {
-                    Ok(_) => {
+                match serial_port.write_all(&bytes_to_send[..]) {
+                    Ok(()) => {
                         print!(".");
                         std::io::stdout().flush().unwrap();
                     }
