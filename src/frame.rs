@@ -30,6 +30,13 @@ pub struct ESP3FrameRef<'a> {
 
 impl ESP3Frame {
 
+    /// Build an owned frame from its component.
+    /// 
+    /// This copies the data. Prefer creating an `ESP3FrameRef` directly, and calling `write()` on it.
+    pub fn assemble(packet_type: u8, data: &[u8], optional_data: &[u8]) -> Self {
+        ESP3FrameRef { packet_type, data, optional_data }.to_owned()
+    }
+
     /// Read a frame from a buffered reader. Will perform header synchronization. Allocates exactly the space needed. 
     pub fn read(reader: &mut impl std::io::BufRead) -> Result<Self, FrameReadError> {
       
