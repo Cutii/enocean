@@ -1,4 +1,4 @@
-//! An incremental CRC8 implementation.
+//! The CRC8 algorithm, used by ESP3 for error detection.
 //! 
 //! Plain function, for byte slices:
 //! ```

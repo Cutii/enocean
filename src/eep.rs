@@ -1,3 +1,5 @@
+//! EnOcean Equipment Profiles - interpretation of radio packet payloads
+
 use crate::enocean::*;
 use crate::*;
 use std::collections::HashMap;

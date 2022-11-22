@@ -36,10 +36,17 @@ pub enum ParseEspErrorKind {
     Unimplemented,
 }
 
+/// The type of errors that may occur while reading/decoding a frame.
+/// There is no variant for sync byte or header CRC errors; these are
+/// treated as synchronization failures and just cause the reader to
+/// try to resync.
 #[derive(Debug, Error)]
 pub enum FrameReadError {
+    /// The reader returned an IO Error
     #[error("IO Error")]            IOError(#[from] std::io::Error),
+    /// The reader reached end of stream before delivering a complete packet
     #[error("End of Stream")]       EOF,
+    /// The data CRC of the packet was incorrect
     #[error("Bad CRC for data")]    DataCRC{ frame: Vec<u8>, data_crc: u8 },
 }
 

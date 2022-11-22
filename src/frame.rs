@@ -1,9 +1,8 @@
 
-//! # EnOcean ESP3 frames
+//! ESP3 synchronization, framing, and error detection.
 //!
-//! A low-level interface to ESP3 frames.
-//!
-//! This module will handle frame synchronization, memory allocation, and CRC checks.
+//! This module will handle synchronization over a byte stream, framing (and
+//! memory allocation of inbound frames), and CRC checking.
 //!
 //! Data, optional data, and packet type are exposed as raw values and byte slices.
 //!
@@ -11,8 +10,10 @@
 //! ```no_run
 //! # use enocean::frame::*;
 //! use std::io::BufReader;
+//! 
 //! let serial_port = serialport::new("/dev/ttyUSB0", 57600).open()?;
 //! let mut serial_port = BufReader::new(serial_port); // Buffer the reader
+//! 
 //! loop {
 //!     let frame = ESP3Frame::read_from(&mut serial_port)?;
 //! }
@@ -22,8 +23,11 @@
 //! To parse a frame already in memory, use a `&mut &[u8]`:
 //! ```
 //! # use enocean::frame::*;
-//! let frame_bin = vec![85, 0, 10, 7, 1, 235, 165, 16, 8, 70, 128, 5, 17, 114, 247, 0, 1, 255, 255, 255, 255, 55, 0, 55];
+//! let frame_bin = vec![85, 0, 10, 7, 1, 235,  // header
+//!                      165, 16, 8, 70, 128, 5, 17, 114, 247, 0, // data
+//!                      1, 255, 255, 255, 255, 55, 0, 55]; // optional + crc.
 //! let frame = ESP3Frame::read_from(&mut &frame_bin[..]).unwrap();
+//! 
 //! assert_eq!(frame.packet_type(), 0x01);
 //! assert_eq!(frame.data(), &[165, 16, 8, 70, 128, 5, 17, 114, 247, 0]);
 //! assert_eq!(frame.optional_data(), &[1, 255, 255, 255, 255, 55, 0]);
