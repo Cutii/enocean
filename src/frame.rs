@@ -48,6 +48,7 @@
 //!
 
 use std::borrow::Borrow;
+use std::io::Read;
 
 use crate::FrameReadError;
 use crate::crc8::{compute_crc8, CRC8};
@@ -83,24 +84,24 @@ impl ESP3Frame {
     }
 
     /// Read a frame from a buffered reader. Will perform header synchronization. Allocates exactly the space needed.
-    pub fn read_from(reader: &mut impl std::io::BufRead) -> Result<Self, FrameReadError> {
+    pub fn read_from(reader: &mut impl Read) -> Result<Self, FrameReadError> {
 
-        let header = loop {  // Synchronize with start of packet
-            let buf = reader.fill_buf()?;
-            if buf.len() == 0 { return Err(FrameReadError::EOF) }
-            if buf[0] != 0x55 {  // Look for synchronizatin byte
-                reader.consume(1);
+        let mut header = [0; 6];
+        loop {  // Synchronize with start of packet
+
+            reader.read(&mut header[0..1])?;
+            if header[0] != 0x55 {  // Look for synchronization byte
+                eprintln!("Reader out of sync. Skipping..");
                 continue;
             }
 
-            if buf.len() < 6 { continue; }
-
-            if compute_crc8(&buf[1..6]) != 0 {  // Check header CRC. If it fails, keep looking for another sync byte.
-                reader.consume(1);
+            reader.read(&mut header[1..6])?;
+            if compute_crc8(&header[1..6]) != 0 {  // Check header CRC. If it fails, keep looking for another sync byte.
+                eprintln!("Header CRC Failed. skipping..");
                 continue;
             }
 
-            break buf;
+            break;
         };
 
         // The frame is now synchronized and the header CRC is valid
@@ -113,7 +114,8 @@ impl ESP3Frame {
         let total_length = 6 + data_length + optional_data_length + 1;
         let mut frame = vec![0; total_length];
 
-        reader.read_exact(&mut frame)?;
+        frame[0..6].copy_from_slice(&header);
+        reader.read_exact(&mut frame[6..])?;
 
         // Check the Data CRC
         let data_crc = compute_crc8(&frame[6..]);
