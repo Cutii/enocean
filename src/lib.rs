@@ -11,6 +11,8 @@ pub mod crc8;
 pub mod eep;
 pub mod enocean;
 pub mod frame;
+pub mod packet;
+pub mod port;
 
 /// Custom Result type = std::result::Result<T, ParseEspError>
 type ParseEspResult<T> = std::result::Result<T, ParseEspError>;
@@ -48,6 +50,13 @@ pub enum FrameReadError {
     #[error("End of Stream")]       EOF,
     /// The data CRC of the packet was incorrect
     #[error("Bad CRC for data")]    DataCRC{ frame: Vec<u8>, data_crc: u8 },
+}
+
+#[derive(Debug,Error)]
+pub enum PacketError {
+    #[error("Could not read frame")]  FrameError(#[from] FrameReadError),
+    #[error("Could not parse frame")] ParseError(#[from] packet::ParseError),
+    #[error("IO Error")]              IOError(#[from] std::io::Error),
 }
 
 impl fmt::Display for ParseEspError {
