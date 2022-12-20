@@ -3,7 +3,7 @@
 //! Enocean : ([official website](https://www.enocean.com/en/)) is a Radio protocol for Smart Home / Buildings devices.
 //!
 //! This lib is a rust implementation of Enocean Serial Protocol, which you can find here: [ESP3](https://www.enocean.com/esp)
-//! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway]https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).
+//! You can use this library with any compatible EnOcean Radio Gateway (eg. [USB300 gateway](https://www.enocean.com/en/enocean-modules/details/usb-300-oem/)).
 //!
 //!
 //! :warning: **This lib is still under construction** :warning:
@@ -18,15 +18,15 @@
 //! For now this lib allow you to create an ESP struct from an incomming bytes vector.
 //!
 //! **Supported packet type** :
-//!  [x]   Radio ERP1 : 0x01  
-//!  [x]   Response : 0x02  
-//!  [ ]   radio_sub_tel : 0x03  
-//!  [ ]   event : 0x04  
-//!  [ ]   common_command : 0x05  
-//!  [ ]   smart_ack_command : 0x06  
-//!  [ ]   remote_man_command : 0x07  
-//!  [ ]   radio_message : 0x09  
-//!  [ ]   radio_advanced : 0x0a  
+//!  - [x]   Radio ERP1 : 0x01  
+//!  - [x]   Response : 0x02  
+//!  - [ ]   radio_sub_tel : 0x03  
+//!  - [ ]   event : 0x04  
+//!  - [ ]   common_command : 0x05  
+//!  - [ ]   smart_ack_command : 0x06  
+//!  - [ ]   remote_man_command : 0x07  
+//!  - [ ]   radio_message : 0x09  
+//!  - [ ]   radio_advanced : 0x0a  
 //!
 //! ## License
 //! [license]: #license
@@ -37,8 +37,7 @@
 //! See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
 //!
 
-use std::vec::Vec;
-
+use num_enum::{TryFromPrimitive, IntoPrimitive};
 
 use crate::*;
 
@@ -98,7 +97,7 @@ pub fn get_raw_message(em: Vec<u8>) -> EnoceanMessage {
 pub struct ESP3 {
     // ESP3 packet structure, data and opt-data depend on packet_type
     data_length: u16,
-    optionnal_data_length: u8,
+    optional_data_length: u8,
     packet_type: PacketType,
     pub data: DataType,
     opt_data: Option<OptDataType>,
@@ -143,7 +142,7 @@ impl From<&ESP3> for Vec<u8> {
     let mut esp3_vector: EnoceanMessage = vec![0x55];
     esp3_vector.push((esp3.data_length >> 8) as u8);
     esp3_vector.push((esp3.data_length) as u8);
-    esp3_vector.push(esp3.optionnal_data_length);
+    esp3_vector.push(esp3.optional_data_length);
     esp3_vector.push(esp3.packet_type as u8);
     esp3_vector.push(esp3.crc_header);
 
@@ -228,7 +227,8 @@ pub enum OptDataType {
 
 /// Simple implementation of EnOcean packet type for ESP3 packet
 /// Supported packet type for now : Radio_ERP1, Response
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 enum PacketType {
     RadioErp1 = 0x01,
     Response = 0x02,
@@ -244,32 +244,23 @@ enum PacketType {
     Radio802_15_4 = 0x10,
     Command2_4 = 0x11,
 }
+
 /// Given an packet type u8 value, return the corresponding PacketType
-fn get_packet_type(em: &EnoceanMessage) -> ParseEspResult<PacketType> {
-    match em[4] {
-        0x01 => Ok(PacketType::RadioErp1),
-        0x02 => Ok(PacketType::Response),
-        // Unimplemented at the moment :
-        0x03 => Ok(PacketType::RadioSubTel),
-        0x04 => Ok(PacketType::Event),
-        0x05 => Ok(PacketType::CommonCommand),
-        0x06 => Ok(PacketType::SmartAckCommand),
-        0x07 => Ok(PacketType::RemoteManCommand),
-        0x09 => Ok(PacketType::RadioMessage),
-        0x0A => Ok(PacketType::RadioErp2),
-        0x10 => Ok(PacketType::Radio802_15_4),
-        0x11 => Ok(PacketType::Command2_4),
-        _ => Err(ParseEspError {
-            message: String::from("Invalid or unimplemented yet packet type"),
-            byte_index: Some(4),
-            packet: em.to_vec(),
-            kind: ParseEspErrorKind::Unimplemented,
-        }),
-    }
+fn get_packet_type(em: &[u8]) -> ParseEspResult<PacketType> {
+    PacketType::try_from_primitive(em[4])
+        .map_err(|_| {
+            ParseEspError {
+                message: String::from("Invalid or unimplemented yet packet type"),
+                byte_index: Some(4),
+                packet: em.to_vec(),
+                kind: ParseEspErrorKind::Unimplemented,
+            }
+        })
 }
 
 /// Simple implementation of possible Radio Organization for a Radio ERP1 packet (from EnOcean ESP3)
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 pub enum Rorg {
     Undefined = 0xFF,
     Rps = 0xF6,
@@ -287,7 +278,8 @@ pub enum Rorg {
     SecEncaps = 0x31,
 }
 /// Simple implementation of possible Return codes for a response packet (from EnOcean ESP3)
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
 pub enum ReturnCode {
     Ok = 0x00,
     Error = 0x01,
@@ -299,70 +291,17 @@ pub enum ReturnCode {
     NoFreeBuffer = 0x07,
     Undefined = 0xff,
 }
+
 fn get_return_code(rc_byte: u8) -> ReturnCode {
-    match rc_byte {
-        0x00 => ReturnCode::Ok,
-        0x01 => ReturnCode::Error,
-        0x02 => ReturnCode::NotSupported,
-        0x03 => ReturnCode::WrongParam,
-        0x04 => ReturnCode::OperationDenied,
-        0x05 => ReturnCode::LockSet,
-        0x06 => ReturnCode::BufferTooSmall,
-        0x07 => ReturnCode::NoFreeBuffer,
-        _ => ReturnCode::Undefined,
-    }
+    ReturnCode::try_from_primitive(rc_byte).unwrap_or(ReturnCode::Undefined)
 }
 
 /// Given an u8 byte containing Rorg indicator, return the corresponding Rorg variant
 fn get_radio_organization(rorg_byte: u8) -> Rorg {
-    match rorg_byte {
-        0xF6 => Rorg::Rps,
-        0xD5 => Rorg::Bs1,
-        0xA5 => Rorg::Bs4,
-        0xD2 => Rorg::Vld,
-        0xD1 => Rorg::Msc,
-        0xA6 => Rorg::Adt,
-        0xD4 => Rorg::Ute,
-        0xC6 => Rorg::SmLrnReq,
-        0xC7 => Rorg::SmLrnAns,
-        0xA7 => Rorg::SmRec,
-        0xC5 => Rorg::SysEx,
-        0x30 => Rorg::Sec,
-        0x31 => Rorg::SecEncaps,
-        _ => Rorg::Undefined,
-    }
+    Rorg::try_from_primitive(rorg_byte).unwrap_or(Rorg::Undefined)
 }
 
-/// Simple implementation as described in the ESP3 protocol
-/// Allow to check the integrity of a message
-
-const CRC_TABLE: [u8; 256] = [
-    0x00, 0x07, 0x0e, 0x09, 0x1c, 0x1b, 0x12, 0x15, 0x38, 0x3f, 0x36, 0x31, 0x24, 0x23, 0x2a, 0x2d,
-    0x70, 0x77, 0x7e, 0x79, 0x6c, 0x6b, 0x62, 0x65, 0x48, 0x4f, 0x46, 0x41, 0x54, 0x53, 0x5a, 0x5d,
-    0xe0, 0xe7, 0xee, 0xe9, 0xfc, 0xfb, 0xf2, 0xf5, 0xd8, 0xdf, 0xd6, 0xd1, 0xc4, 0xc3, 0xca, 0xcd,
-    0x90, 0x97, 0x9e, 0x99, 0x8c, 0x8b, 0x82, 0x85, 0xa8, 0xaf, 0xa6, 0xa1, 0xb4, 0xb3, 0xba, 0xbd,
-    0xc7, 0xc0, 0xc9, 0xce, 0xdb, 0xdc, 0xd5, 0xd2, 0xff, 0xf8, 0xf1, 0xf6, 0xe3, 0xe4, 0xed, 0xea,
-    0xb7, 0xb0, 0xb9, 0xbe, 0xab, 0xac, 0xa5, 0xa2, 0x8f, 0x88, 0x81, 0x86, 0x93, 0x94, 0x9d, 0x9a,
-    0x27, 0x20, 0x29, 0x2e, 0x3b, 0x3c, 0x35, 0x32, 0x1f, 0x18, 0x11, 0x16, 0x03, 0x04, 0x0d, 0x0a,
-    0x57, 0x50, 0x59, 0x5e, 0x4b, 0x4c, 0x45, 0x42, 0x6f, 0x68, 0x61, 0x66, 0x73, 0x74, 0x7d, 0x7a,
-    0x89, 0x8e, 0x87, 0x80, 0x95, 0x92, 0x9b, 0x9c, 0xb1, 0xb6, 0xbf, 0xb8, 0xad, 0xaa, 0xa3, 0xa4,
-    0xf9, 0xfe, 0xf7, 0xf0, 0xe5, 0xe2, 0xeb, 0xec, 0xc1, 0xc6, 0xcf, 0xc8, 0xdd, 0xda, 0xd3, 0xd4,
-    0x69, 0x6e, 0x67, 0x60, 0x75, 0x72, 0x7b, 0x7c, 0x51, 0x56, 0x5f, 0x58, 0x4d, 0x4a, 0x43, 0x44,
-    0x19, 0x1e, 0x17, 0x10, 0x05, 0x02, 0x0b, 0x0c, 0x21, 0x26, 0x2f, 0x28, 0x3d, 0x3a, 0x33, 0x34,
-    0x4e, 0x49, 0x40, 0x47, 0x52, 0x55, 0x5c, 0x5b, 0x76, 0x71, 0x78, 0x7f, 0x6a, 0x6d, 0x64, 0x63,
-    0x3e, 0x39, 0x30, 0x37, 0x22, 0x25, 0x2c, 0x2b, 0x06, 0x01, 0x08, 0x0f, 0x1a, 0x1d, 0x14, 0x13,
-    0xae, 0xa9, 0xa0, 0xa7, 0xb2, 0xb5, 0xbc, 0xbb, 0x96, 0x91, 0x98, 0x9f, 0x8a, 0x8d, 0x84, 0x83,
-    0xde, 0xd9, 0xd0, 0xd7, 0xc2, 0xc5, 0xcc, 0xcb, 0xe6, 0xe1, 0xe8, 0xef, 0xfa, 0xfd, 0xf4, 0xf3,
-];
-/// Simple implementation as described in the ESP3 protocol
-/// Allow to check the integrity of a message
-pub fn compute_crc8(msg: &Vec<u8>) -> u8 {
-    let mut checksum = 0;
-    for byte in msg.iter() {
-        checksum = CRC_TABLE[(checksum & 0xFF ^ byte & 0xFF) as usize];
-    }
-    checksum
-}
+pub use crc8::compute_crc8;
 
 /// Main function which convert an u8 vector of incoming byte into an ESP3 variable :
 ///
@@ -382,14 +321,15 @@ pub fn compute_crc8(msg: &Vec<u8>) -> u8 {
 /// |-------------|---------------|------------------------|----------------|----------|   
 /// | Content     | Rorg (0xD5)   | Data payload as EEP*   | Sender ID      | Status   |   
 
-pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
+
+pub fn esp3_of_enocean_message(em: &[u8]) -> ParseEspResult<ESP3> {
     // Make some verifications about the received message
     if em[0] != 0x55 {
         // EnOcean message must start by 0x55
         return Err(ParseEspError {
             message: String::from("Sync Byte Error"),
             byte_index: Some(0),
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::NoSyncByte,
         });
     } else if em.len() <= 7 {
@@ -397,7 +337,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("Invalid input message"),
             byte_index: None,
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::IncompleteMessage,
         });
     }
@@ -407,32 +347,32 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
         return Err(ParseEspError {
             message: String::from("CRC Error"),
             byte_index: Some(5),
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::CrcMismatch,
         });
     }
 
     // As header seems OK, we can parse data and opt_data length fields :
     let data_length: u16 = (em[1] as u16) << 8 | em[2] as u16;
-    let optionnal_data_length: u8 = em[3];
+    let optional_data_length: u8 = em[3];
 
     // And so we can check header and data length :
-    if em.len() < (data_length as usize + optionnal_data_length as usize + 7) {
+    if em.len() < (data_length as usize + optional_data_length as usize + 7) {
         return Err(ParseEspError {
             message: String::from("Packet length error"),
             byte_index: None,
-            packet: em,
+            packet: em.into(),
             kind: ParseEspErrorKind::IncompleteMessage,
         });
     }
     let crc_data =
-        compute_crc8(&em[6..6 + data_length as usize + optionnal_data_length as usize].to_vec());
+        compute_crc8(&em[6..6 + data_length as usize + optional_data_length as usize].to_vec());
     // And DATA CRC :
-    if crc_data != em[6 + data_length as usize + optionnal_data_length as usize] {
+    if crc_data != em[6 + data_length as usize + optional_data_length as usize] {
         return Err(ParseEspError {
             message: String::from("CRC Data Error"),
-            byte_index: Some(em[6 + data_length as usize + optionnal_data_length as usize] as i16),
-            packet: em,
+            byte_index: Some(em[6 + data_length as usize + optional_data_length as usize] as i16),
+            packet: em.into(),
             kind: ParseEspErrorKind::CrcMismatch,
         });
     }
@@ -487,7 +427,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
                     };
                     opt_data = Some(OptDataType::RawData {
                         raw_data: em[6 + data_length as usize
-                            ..6 + data_length as usize + optionnal_data_length as usize]
+                            ..6 + data_length as usize + optional_data_length as usize]
                             .to_vec(),
                     })
                 }
@@ -497,7 +437,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
             return Err(ParseEspError {
                 message: String::from("Packet type error / not implemented yet"),
                 byte_index: Some(4),
-                packet: em,
+                packet: em.into(),
                 kind: ParseEspErrorKind::Unimplemented,
             });
         }
@@ -506,7 +446,7 @@ pub fn esp3_of_enocean_message(em: EnoceanMessage) -> ParseEspResult<ESP3> {
     // Return an Ok(ESP3)
     Ok(ESP3 {
         data_length,
-        optionnal_data_length,
+        optional_data_length,
         packet_type,
         data,
         opt_data,
@@ -531,9 +471,9 @@ mod tests {
         let data_length: u16 = 10;
         let optionnal_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(data_length, result.data_length);
-        assert_eq!(optionnal_length, result.optionnal_data_length);
+        assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
     }
     #[test]
@@ -545,9 +485,9 @@ mod tests {
         let data_length: u16 = 7;
         let optionnal_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(data_length, result.data_length);
-        assert_eq!(optionnal_length, result.optionnal_data_length);
+        assert_eq!(optionnal_length, result.optional_data_length);
         assert_eq!(packet_type, result.packet_type);
     }
     #[test]
@@ -557,7 +497,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         let crc_header: u8 = 122;
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(crc_header, result.crc_header);
     }
     #[test]
@@ -580,7 +520,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         let data_length: u16 = 7;
-        let optionnal_data_length: u8 = 7;
+        let optional_data_length: u8 = 7;
         let packet_type = PacketType::RadioErp1;
         let crc_header: u8 = 122;
         let crc_data: u8 = 39;
@@ -600,14 +540,14 @@ mod tests {
         });
         let esp_packet = ESP3 {
             data_length,
-            optionnal_data_length,
+            optional_data_length,
             packet_type: packet_type,
             data,
             opt_data,
             crc_header,
             crc_data,
         };
-        let result = esp3_of_enocean_message(received_message).unwrap();
+        let result = esp3_of_enocean_message(&received_message).unwrap();
         assert_eq!(esp_packet, result);
     }
 
@@ -619,7 +559,7 @@ mod tests {
             85, 0, 7, 7, 1, 122, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 000,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("CRC Data Error")
@@ -633,7 +573,7 @@ mod tests {
             65, 0, 235,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("Sync Byte Error")
@@ -646,7 +586,7 @@ mod tests {
             85, 0, 7, 7, 1, 000, 246, 0, 254, 245, 143, 212, 32, 2, 255, 255, 255, 255, 48, 0, 39,
         ];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("CRC Error")
@@ -657,7 +597,7 @@ mod tests {
         // received_message is a valid message from a necklace pushbutton (EEP -00-01)
         let invalid_received_message = vec![85, 0, 7, 7, 1];
         assert_eq!(
-            esp3_of_enocean_message(invalid_received_message)
+            esp3_of_enocean_message(&invalid_received_message)
                 .unwrap_err()
                 .message,
             String::from("Invalid input message")
@@ -672,16 +612,16 @@ mod tests {
             85, 0, 10, 7, 1, 235, 165, 0, 229, 204, 10, 5, 17, 114, 247, 0, 1, 255, 255, 255, 255,
             54, 0, 213,
         ];
-        let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet: ESP3 = esp3_of_enocean_message(&received_message).unwrap();
         let valid_sender_id: [u8; 4] = [5, 17, 114, 247];
         let valid_payload = vec![0, 229, 204, 10];
         let valid_rorg = Rorg::Bs4;
         let valid_status = 0x00;
 
-        let mut result_sender_id: [u8; 4];
-        let mut result_rorg: Rorg;
-        let mut result_status: u8;
-        let mut result_payload: Vec<u8> = Vec::new();
+        let result_sender_id: [u8; 4];
+        let result_rorg: Rorg;
+        let result_status: u8;
+        let result_payload: Vec<u8>;
 
         match esp3_packet.data {
             DataType::Erp1Data {
@@ -722,7 +662,7 @@ mod tests {
         received_message.extend_from_slice(&data);
         received_message.push(crc_data);
 
-        let esp3_packet: ESP3 = esp3_of_enocean_message(received_message).unwrap();
+        let esp3_packet: ESP3 = esp3_of_enocean_message(&received_message[..]).unwrap();
 
         let result_return_code: ReturnCode;
         let result_payload: Option<Vec<u8>>;
